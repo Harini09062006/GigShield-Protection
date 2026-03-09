@@ -104,6 +104,21 @@ export const api = {
       }
     }
   },
+  weather: {
+    getByCity: {
+      method: 'GET' as const,
+      path: '/api/weather/:city' as const,
+      responses: {
+        200: z.object({
+          city: z.string(),
+          rainfall: z.number(),
+          severity: z.string(),
+          riskLevel: z.enum(['low', 'medium', 'high', 'extreme']),
+        }),
+        404: errorSchemas.notFound
+      }
+    }
+  },
   admin: {
     stats: {
       method: 'GET' as const,

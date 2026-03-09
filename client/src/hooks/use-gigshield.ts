@@ -199,3 +199,26 @@ export function useAdminStats() {
     refetchInterval: 5000, // Live updates for demo
   });
 }
+
+// ---------------------------------------------------------------
+// WEATHER
+// ---------------------------------------------------------------
+export function useWeather(city?: string) {
+  return useQuery({
+    queryKey: [api.weather.getByCity.path, city],
+    queryFn: async () => {
+      if (!city) return null;
+      const url = buildUrl(api.weather.getByCity.path, { city });
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Failed to fetch weather");
+      return res.json() as Promise<{
+        city: string;
+        rainfall: number;
+        severity: string;
+        riskLevel: 'low' | 'medium' | 'high' | 'extreme';
+      }>;
+    },
+    enabled: !!city,
+    refetchInterval: 30000, // Refresh every 30s for live demo
+  });
+}

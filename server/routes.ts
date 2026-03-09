@@ -133,7 +133,79 @@ export async function registerRoutes(
     res.json(stats);
   });
 
+  // Weather endpoint - Simulate OpenWeather API check
+  app.get(api.weather.getByCity.path, async (req, res) => {
+    const city = req.params.city;
+    
+    // Simulate OpenWeather API call with mock data
+    // In production, this would call: https://api.openweathermap.org/data/2.5/weather?q={city}&appid={apiKey}
+    const weatherData = mockWeatherData(city);
+    
+    // Check if rainfall exceeds threshold (> 50mm = high risk)
+    const RAINFALL_THRESHOLD = 50;
+    if (weatherData.rainfall > RAINFALL_THRESHOLD) {
+      // Auto-trigger claims for workers in this city with active plans
+      const workersList = await storage.getWorkers();
+      const cityWorkers = workersList.filter(w => w.city.toLowerCase() === city.toLowerCase());
+      
+      for (const w of cityWorkers) {
+        const wp = await storage.getWorkerPlan(w.id);
+        if (wp && wp.workerPlan.status === 'active') {
+          // Check if claim already exists for this event
+          const existingClaims = await storage.getWorkerClaims(w.id);
+          const recentClaim = existingClaims.find(c => 
+            c.reason.includes('rainfall') && 
+            c.createdAt && new Date(c.createdAt).getTime() > Date.now() - 3600000 // within 1 hour
+          );
+          
+          if (!recentClaim) {
+            await storage.createClaim({
+              workerId: w.id,
+              planId: wp.plan.id,
+              amount: wp.plan.coverageAmount,
+              reason: `Parametric Trigger: Heavy rainfall (${weatherData.rainfall}mm)`,
+              status: "approved"
+            });
+          }
+        }
+      }
+    }
+    
+    res.json({
+      city,
+      rainfall: weatherData.rainfall,
+      severity: weatherData.severity,
+      riskLevel: weatherData.riskLevel
+    });
+  });
+
   return httpServer;
+}
+
+// Mock OpenWeather API data - In production, call real API
+function mockWeatherData(city: string) {
+  // Simulate varying weather patterns per city
+  const weatherPatterns: Record<string, { rainfall: number; severity: string; riskLevel: 'low' | 'medium' | 'high' | 'extreme' }> = {
+    'mumbai': { rainfall: 45, severity: 'moderate', riskLevel: 'medium' },
+    'bangalore': { rainfall: 25, severity: 'light', riskLevel: 'low' },
+    'delhi': { rainfall: 60, severity: 'heavy', riskLevel: 'high' },
+    'kolkata': { rainfall: 75, severity: 'severe', riskLevel: 'extreme' },
+    'pune': { rainfall: 35, severity: 'light', riskLevel: 'low' },
+  };
+  
+  const pattern = weatherPatterns[city.toLowerCase()];
+  if (pattern) return pattern;
+  
+  // Random for unknown cities
+  const rainfall = Math.floor(Math.random() * 100);
+  const riskLevel: 'low' | 'medium' | 'high' | 'extreme' = 
+    rainfall < 20 ? 'low' : rainfall < 50 ? 'medium' : rainfall < 80 ? 'high' : 'extreme';
+  
+  return {
+    rainfall,
+    severity: riskLevel === 'low' ? 'light' : riskLevel === 'medium' ? 'moderate' : riskLevel === 'high' ? 'heavy' : 'severe',
+    riskLevel
+  };
 }
 
 // Helper to ensure we have plans in DB

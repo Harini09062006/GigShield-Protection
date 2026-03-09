@@ -1,15 +1,17 @@
 import { useEffect, useState } from "react";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import confetti from "canvas-confetti";
 import { 
   useWorker, useWorkerPlan, useWorkerClaims, 
-  useCityDisruptions, useTriggerDisruption, useCreateClaim, useSimulatePayout 
+  useCityDisruptions, useTriggerDisruption, useCreateClaim, useSimulatePayout, useWeather
 } from "@/hooks/use-gigshield";
 import { Layout } from "@/components/layout";
 import { 
   ShieldCheck, AlertTriangle, CloudRain, Wind, 
-  Activity, CheckCircle2, Clock, Wallet, Info
+  Activity, CheckCircle2, Clock, Wallet, Info, Droplets, ArrowRight
 } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 export default function WorkerDashboard() {
   const [, setLocation] = useLocation();
@@ -19,6 +21,7 @@ export default function WorkerDashboard() {
   const { data: planData, isLoading: planLoading } = useWorkerPlan(workerId);
   const { data: claims } = useWorkerClaims(workerId);
   const { data: disruptions } = useCityDisruptions(worker?.city);
+  const { data: weatherData } = useWeather(worker?.city);
 
   const triggerDisruption = useTriggerDisruption();
   const createClaim = useCreateClaim();
@@ -134,85 +137,111 @@ export default function WorkerDashboard() {
           </div>
         </div>
 
-        {/* Live Weather Risk Card */}
-        <div className={`glass-card rounded-3xl p-6 md:p-8 flex flex-col ${hasAlert ? 'border-destructive/50 shadow-destructive/10' : ''}`}>
-          <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-            <Activity size={20} className={hasAlert ? "text-destructive" : "text-primary"} /> 
-            Live Risk Status
+        {/* Live Weather & Risk Card */}
+        <Card className={`rounded-3xl p-6 md:p-8 flex flex-col relative overflow-hidden ${
+          weatherData?.riskLevel === 'extreme' || weatherData?.riskLevel === 'high' 
+            ? 'border-l-4 border-l-destructive bg-red-50/50' 
+            : weatherData?.riskLevel === 'medium'
+            ? 'border-l-4 border-l-yellow-500 bg-yellow-50/50'
+            : 'border-l-4 border-l-green-500 bg-green-50/50'
+        }`}>
+          <h3 className="text-lg font-bold mb-4 flex items-center gap-2 relative z-10">
+            <Droplets size={20} className={weatherData?.riskLevel === 'low' ? 'text-green-600' : weatherData?.riskLevel === 'medium' ? 'text-yellow-600' : 'text-red-600'} />
+            Weather Risk Level
           </h3>
           
-          {hasAlert ? (
-            <div className="flex-1 flex flex-col justify-center text-center">
-              <div className="w-16 h-16 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-4 animate-pulse">
-                <AlertTriangle size={32} />
+          {weatherData ? (
+            <div className="space-y-4">
+              <div className="bg-white rounded-2xl p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-sm font-medium text-muted-foreground">Rainfall</span>
+                  <span className="font-bold text-foreground">{weatherData.rainfall}mm</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    className={`h-2 rounded-full ${
+                      weatherData.riskLevel === 'low' ? 'bg-green-500' : 
+                      weatherData.riskLevel === 'medium' ? 'bg-yellow-500' : 
+                      weatherData.riskLevel === 'high' ? 'bg-orange-500' : 'bg-red-600'
+                    }`}
+                    style={{ width: `${Math.min((weatherData.rainfall / 100) * 100, 100)}%` }}
+                  />
+                </div>
+                <div className="flex justify-between text-xs text-muted-foreground mt-2">
+                  <span>Low</span>
+                  <span>Extreme</span>
+                </div>
               </div>
-              <h4 className="text-xl font-bold text-destructive mb-2">Severe Weather Alert</h4>
-              <p className="text-muted-foreground text-sm">
-                {activeDisruptions[0].type.toUpperCase()} alert for {worker.city}. Stay safe! If conditions worsen, a claim will trigger automatically.
-              </p>
+
+              <div className="bg-white rounded-2xl p-4">
+                <p className="text-sm text-muted-foreground mb-1">Severity Level</p>
+                <div className="flex items-center justify-between">
+                  <p className="font-bold capitalize text-foreground">{weatherData.severity}</p>
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold capitalize ${
+                    weatherData.riskLevel === 'low' ? 'bg-green-100 text-green-700' :
+                    weatherData.riskLevel === 'medium' ? 'bg-yellow-100 text-yellow-700' :
+                    weatherData.riskLevel === 'high' ? 'bg-orange-100 text-orange-700' :
+                    'bg-red-100 text-red-700'
+                  }`}>
+                    {weatherData.riskLevel}
+                  </span>
+                </div>
+              </div>
+
+              {(weatherData.riskLevel === 'high' || weatherData.riskLevel === 'extreme') && (
+                <div className="bg-red-100 border border-red-300 rounded-xl p-3 text-center">
+                  <p className="text-xs font-bold text-red-700 mb-1">⚠️ Risk Alert Active</p>
+                  <p className="text-xs text-red-600">Rainfall exceeds safe threshold. Claims may auto-trigger if conditions persist.</p>
+                </div>
+              )}
             </div>
           ) : (
-            <div className="flex-1 flex flex-col justify-center text-center">
-              <div className="w-16 h-16 rounded-full bg-green-100 text-green-600 flex items-center justify-center mx-auto mb-4">
-                <Wind size={32} />
-              </div>
-              <h4 className="text-xl font-bold text-green-600 mb-2">All Clear</h4>
-              <p className="text-muted-foreground text-sm">
-                Weather conditions in {worker.city} are normal. Safe riding!
-              </p>
+            <div className="text-center py-6">
+              <Wind className="text-muted-foreground mx-auto mb-2 opacity-50" size={32} />
+              <p className="text-sm text-muted-foreground">Loading weather data...</p>
             </div>
           )}
-        </div>
+        </Card>
       </div>
 
-      {/* Claims History */}
-      <div className="glass-card rounded-3xl p-6 md:p-8">
-        <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-          <Wallet size={20} className="text-primary" /> Claims & Payouts
-        </h3>
-
-        {!claims || claims.length === 0 ? (
-          <div className="text-center py-12 border-2 border-dashed border-border rounded-2xl bg-secondary/30">
-            <ShieldCheck size={48} className="text-muted-foreground mx-auto mb-4 opacity-50" />
-            <h4 className="text-lg font-semibold text-foreground mb-1">No claims yet</h4>
-            <p className="text-muted-foreground text-sm">You haven't experienced any covered weather events.</p>
+      {/* Claims Summary & Quick Link */}
+      <Card className="rounded-3xl p-6 md:p-8 bg-gradient-to-br from-primary/5 to-secondary/5">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+          <div>
+            <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
+              <Wallet size={20} className="text-primary" /> Claims & Payouts
+            </h3>
+            <p className="text-muted-foreground text-sm">
+              {!claims || claims.length === 0 
+                ? "No claims yet - you're all covered!" 
+                : `You have ${claims.length} claim${claims.length > 1 ? 's' : ''} on record`
+              }
+            </p>
           </div>
-        ) : (
-          <div className="space-y-4">
-            {claims.map((claim) => (
-              <div key={claim.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl border border-border/50 hover:bg-secondary/20 transition-colors">
-                <div className="flex items-start gap-4 mb-4 sm:mb-0">
-                  <div className={`mt-1 p-2 rounded-full ${
-                    claim.status === 'paid' ? 'bg-green-100 text-green-600' :
-                    claim.status === 'approved' ? 'bg-blue-100 text-blue-600' :
-                    'bg-yellow-100 text-yellow-600'
-                  }`}>
-                    {claim.status === 'paid' ? <CheckCircle2 size={20} /> : <Clock size={20} />}
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-foreground">{claim.reason}</h4>
-                    <p className="text-sm text-muted-foreground">
-                      {claim.createdAt ? new Date(claim.createdAt).toLocaleDateString() : 'Just now'} • ID: #{claim.id.toString().padStart(4, '0')}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto">
-                  <div className="text-right">
-                    <p className="text-xl font-bold text-foreground">₹{claim.amount / 100}</p>
-                  </div>
-                  <div className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${
-                    claim.status === 'paid' ? 'bg-green-100 text-green-700' :
-                    claim.status === 'approved' ? 'bg-blue-100 text-blue-700' :
-                    'bg-yellow-100 text-yellow-700'
-                  }`}>
-                    {claim.status}
-                  </div>
-                </div>
-              </div>
-            ))}
+          <Link href="/claims">
+            <Button className="gap-2 whitespace-nowrap">
+              View Full History <ArrowRight size={16} />
+            </Button>
+          </Link>
+        </div>
+
+        {claims && claims.length > 0 && (
+          <div className="grid grid-cols-3 gap-3 mt-6 pt-6 border-t border-border">
+            <div className="text-center">
+              <p className="text-2xl font-bold text-primary">{claims.length}</p>
+              <p className="text-xs text-muted-foreground mt-1">Total Claims</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold text-green-600">₹{claims.filter(c => c.status === 'paid').reduce((sum, c) => sum + c.amount, 0) / 100}</p>
+              <p className="text-xs text-muted-foreground mt-1">Paid Out</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold text-blue-600">{claims.filter(c => c.status === 'pending' || c.status === 'approved').length}</p>
+              <p className="text-xs text-muted-foreground mt-1">Processing</p>
+            </div>
           </div>
         )}
-      </div>
+      </Card>
     </Layout>
   );
 }

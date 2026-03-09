@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
-import { ShieldCheck, LogOut, ArrowLeft } from "lucide-react";
+import { ShieldCheck, LogOut, ArrowLeft, FileText, Home } from "lucide-react";
 
 interface LayoutProps {
   children: ReactNode;
@@ -28,10 +28,35 @@ export function Layout({ children, isWorker }: LayoutProps) {
             </span>
           </Link>
           
-          <nav className="flex items-center gap-4">
+          <nav className="flex items-center gap-2">
+            {isWorker && (
+              <>
+                <Link 
+                  href="/dashboard"
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    location === '/dashboard' 
+                      ? 'bg-primary/10 text-primary' 
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <Home size={16} />
+                </Link>
+                <Link 
+                  href="/claims"
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    location === '/claims' 
+                      ? 'bg-primary/10 text-primary' 
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <FileText size={16} />
+                </Link>
+              </>
+            )}
+            
             {location !== "/" && !isWorker && (
-              <Link href="/" className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-                <ArrowLeft size={16} /> Back Home
+              <Link href="/" className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                <ArrowLeft size={16} /> Back
               </Link>
             )}
             
@@ -41,7 +66,7 @@ export function Layout({ children, isWorker }: LayoutProps) {
                 className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-all"
               >
                 <LogOut size={16} />
-                Switch Account
+                Switch
               </button>
             )}
           </nav>
