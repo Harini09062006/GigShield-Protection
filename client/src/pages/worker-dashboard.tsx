@@ -8,10 +8,11 @@ import {
 import { Layout } from "@/components/layout";
 import { 
   ShieldCheck, AlertTriangle, CloudRain, Wind, 
-  Activity, CheckCircle2, Clock, Wallet, Info, Droplets, ArrowRight
+  Activity, CheckCircle2, Clock, Wallet, Info, Droplets, ArrowRight, Brain, TrendingUp
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 export default function WorkerDashboard() {
   const [, setLocation] = useLocation();
@@ -109,9 +110,9 @@ export default function WorkerDashboard() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
         {/* Plan Status Card */}
-        <div className="lg:col-span-2 glass-card rounded-3xl p-6 md:p-8 bg-gradient-to-br from-primary to-indigo-600 text-white relative overflow-hidden shadow-xl shadow-primary/20">
+        <div className="lg:col-span-1 glass-card rounded-3xl p-6 md:p-8 bg-gradient-to-br from-primary to-indigo-600 text-white relative overflow-hidden shadow-xl shadow-primary/20">
           <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
             <ShieldCheck size={200} />
           </div>
@@ -136,6 +137,68 @@ export default function WorkerDashboard() {
             </div>
           </div>
         </div>
+
+        {/* AI Risk Prediction Card */}
+        <Card className="rounded-3xl p-6 md:p-8 flex flex-col relative overflow-hidden border-l-4 border-l-purple-500 bg-gradient-to-br from-purple-50 to-transparent">
+          <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+            <Brain size={20} className="text-purple-600" />
+            AI Risk Prediction
+          </h3>
+          
+          {weatherData ? (
+            <div className="space-y-3">
+              <div className="bg-white rounded-2xl p-4">
+                <p className="text-xs text-muted-foreground mb-1 font-medium">Predicted Rainfall</p>
+                <div className="flex items-end justify-between">
+                  <p className="font-bold text-foreground text-2xl">{weatherData.rainfall}mm</p>
+                  <TrendingUp className="text-purple-500" size={20} />
+                </div>
+              </div>
+
+              <div className="bg-white rounded-2xl p-4">
+                <p className="text-xs text-muted-foreground mb-1 font-medium">AQI Level</p>
+                <div className="flex items-end justify-between">
+                  <div>
+                    <p className="font-bold text-foreground text-2xl">{weatherData.aqi}</p>
+                    <p className="text-xs text-muted-foreground">{weatherData.aqiLevel}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-2xl p-4">
+                <p className="text-xs text-muted-foreground mb-1 font-medium">Disruption Probability</p>
+                <div className="flex items-center justify-between mb-2">
+                  <p className="font-bold text-foreground text-2xl">{weatherData.disruptionProbability}%</p>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    className={`h-2 rounded-full ${
+                      weatherData.disruptionProbability >= 70 ? 'bg-red-500' :
+                      weatherData.disruptionProbability >= 40 ? 'bg-yellow-500' :
+                      'bg-green-500'
+                    }`}
+                    style={{ width: `${weatherData.disruptionProbability}%` }}
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-center pt-2">
+                <Badge variant={
+                  weatherData.aiRiskLevel === 'high' ? 'destructive' :
+                  weatherData.aiRiskLevel === 'medium' ? 'secondary' :
+                  'default'
+                } className="text-sm font-bold px-4 py-2 capitalize">
+                  Risk: {weatherData.aiRiskLevel}
+                </Badge>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-6">
+              <Brain className="text-muted-foreground mx-auto mb-2 opacity-50" size={32} />
+              <p className="text-sm text-muted-foreground">Analyzing weather data...</p>
+            </div>
+          )}
+        </Card>
 
         {/* Live Weather & Risk Card */}
         <Card className={`rounded-3xl p-6 md:p-8 flex flex-col relative overflow-hidden ${

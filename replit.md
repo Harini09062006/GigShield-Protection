@@ -41,8 +41,28 @@ GigShield is an AI-powered parametric insurance platform designed for delivery w
 - Summary statistics on the history page
 - Files: `client/src/pages/claim-history.tsx`
 
-#### 5. Enhanced Dashboard
+#### 5. AI Risk Prediction Module
+- **Intelligent Risk Analysis**: ML-powered disruption forecasting
+- **Four Key Metrics**:
+  - Predicted Rainfall (mm)
+  - AQI Level (Air Quality Index with descriptions: Good, Satisfactory, Moderately Polluted, Poor, Very Poor, Severe)
+  - Delivery Disruption Probability (%)
+  - Risk Level Badge (Low/Medium/High)
+- **Simulated AI Logic**:
+  - High Risk: Rainfall > 50mm OR AQI > 200 → 70-95% disruption probability
+  - Medium Risk: Rainfall 20-50mm → 40-70% disruption probability
+  - Low Risk: Else → 5-30% disruption probability
+- Visual progress bar showing disruption probability
+- Color-coded risk badges for quick assessment
+- Files: `server/routes.ts` (calculateAIRiskPrediction function), `client/src/pages/worker-dashboard.tsx`
+
+#### 6. Enhanced Dashboard UI
 - **Modern Card Layout**: Gradient backgrounds, clear typography, professional styling
+- **4-Column Grid Layout**:
+  - Plan Status Card (Insurance details)
+  - AI Risk Prediction Card (NEW - ML-powered forecasting)
+  - Live Weather Risk Card (Real-time rainfall monitoring)
+  - (Additional cards on scroll)
 - **Weather Risk Alerts**: Real-time rainfall monitoring with visual indicators
   - Risk level badges (Low/Medium/High/Extreme)
   - Progress bar showing rainfall percentage
@@ -51,7 +71,7 @@ GigShield is an AI-powered parametric insurance platform designed for delivery w
 - **Direct Link to Claim History**: One-click access from dashboard
 - Files: `client/src/pages/worker-dashboard.tsx`
 
-#### 6. Payout Simulation
+#### 7. Payout Simulation
 - "Simulate Severe Weather" button triggers complete flow:
   1. Creates disruption event
   2. Auto-triggers claim creation
@@ -59,7 +79,7 @@ GigShield is an AI-powered parametric insurance platform designed for delivery w
 - Displays claim approval and payout processing messages
 - Files: `client/src/pages/worker-dashboard.tsx`
 
-#### 7. Admin Dashboard
+#### 8. Admin Dashboard
 - Real-time statistics:
   - Total workers registered
   - Disruptions detected
@@ -111,13 +131,46 @@ GigShield is an AI-powered parametric insurance platform designed for delivery w
 ### Weather Auto-Trigger Logic
 The weather endpoint (`GET /api/weather/:city`) includes intelligent automation:
 1. Fetches or generates weather data for the city
-2. Checks if rainfall exceeds 50mm threshold
-3. If threshold exceeded:
+2. Calculates AQI (Air Quality Index) based on rainfall patterns
+3. Runs AI Risk Prediction algorithm
+4. Checks if rainfall exceeds 50mm threshold
+5. If threshold exceeded:
    - Finds all active workers in that city
    - Checks if they have active insurance plans
    - Auto-creates claims with status "approved"
    - Prevents duplicate claims within 1 hour window
-4. Returns weather data with risk level assessment
+6. Returns comprehensive weather + AI prediction data
+
+### AI Risk Prediction Algorithm
+The backend implements a sophisticated risk assessment system:
+```
+// Input: rainfall (mm)
+// Output: aqi, aqiLevel, disruptionProbability, aiRiskLevel
+
+1. Generate AQI (0-500 scale):
+   - Inverse relationship with rainfall
+   - Higher rainfall = better air quality
+   - Added randomness for realism
+
+2. Determine AQI Level description:
+   - 0-50: Good
+   - 51-100: Satisfactory
+   - 101-200: Moderately Polluted
+   - 201-300: Poor
+   - 301-400: Very Poor
+   - 400+: Severe
+
+3. Calculate Disruption Probability:
+   - IF rainfall > 50mm OR aqi > 200:
+     disruptionProbability = 70-95%
+     aiRiskLevel = "high"
+   - ELSE IF rainfall 20-50mm:
+     disruptionProbability = 40-70%
+     aiRiskLevel = "medium"
+   - ELSE:
+     disruptionProbability = 5-30%
+     aiRiskLevel = "low"
+```
 
 ### Mock Weather Patterns
 ```
@@ -164,10 +217,27 @@ npm run db:push
 - **Real-Time**: Live weather monitoring and instant claim processing
 - **Modern UI**: Professional, responsive design for delivery workers on mobile
 
+## Features Summary
+
+### Complete Feature Set
+✅ Worker Registration with GPS location
+✅ Multi-tier Insurance Plans (Basic/Pro/Max Shield)
+✅ Real-time Weather Integration (mocked OpenWeather API)
+✅ AI-Powered Risk Prediction (AQI + Disruption Probability)
+✅ Automatic Parametric Claims (triggered by rainfall > 50mm)
+✅ Claim History & Tracking Dashboard
+✅ Payout Simulation with Confetti Celebration
+✅ Admin Dashboard with Live Statistics
+✅ Modern, Responsive UI with Gradient Cards
+✅ Mobile-Friendly Design for Delivery Workers
+
 ## Future Enhancements
 - Real OpenWeather API integration (currently mocked)
-- SMS notifications for claim triggers
+- Real-time ML model training on historical claim data
+- SMS/Push notifications for claim triggers
 - Multiple disruption types (flood, pollution, heatwave)
 - Claim appeal process
 - Worker earnings tracking
 - Integration with payment gateways for payouts
+- Predictive maintenance for delivery vehicle health
+- Peer-to-peer claim verification system

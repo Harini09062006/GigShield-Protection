@@ -216,6 +216,10 @@ export function useWeather(city?: string) {
         rainfall: number;
         severity: string;
         riskLevel: 'low' | 'medium' | 'high' | 'extreme';
+        aqi: number;
+        aqiLevel: string;
+        disruptionProbability: number;
+        aiRiskLevel: 'low' | 'medium' | 'high';
       }>;
     },
     enabled: !!city,

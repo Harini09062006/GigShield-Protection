@@ -171,11 +171,18 @@ export async function registerRoutes(
       }
     }
     
+    // Calculate AI predictions
+    const aiPrediction = calculateAIRiskPrediction(weatherData.rainfall);
+    
     res.json({
       city,
       rainfall: weatherData.rainfall,
       severity: weatherData.severity,
-      riskLevel: weatherData.riskLevel
+      riskLevel: weatherData.riskLevel,
+      aqi: aiPrediction.aqi,
+      aqiLevel: aiPrediction.aqiLevel,
+      disruptionProbability: aiPrediction.disruptionProbability,
+      aiRiskLevel: aiPrediction.aiRiskLevel
     });
   });
 
@@ -205,6 +212,51 @@ function mockWeatherData(city: string) {
     rainfall,
     severity: riskLevel === 'low' ? 'light' : riskLevel === 'medium' ? 'moderate' : riskLevel === 'high' ? 'heavy' : 'severe',
     riskLevel
+  };
+}
+
+// AI Risk Prediction Logic based on weather conditions
+function calculateAIRiskPrediction(rainfall: number) {
+  // Generate simulated AQI (Air Quality Index) - typically ranges 0-500
+  // Higher rainfall usually means better air quality (0 = excellent, 500+ = hazardous)
+  const baseAQI = Math.max(30, 250 - rainfall * 2); // Inverse relationship
+  const aqi = Math.round(baseAQI + (Math.random() * 40 - 20)); // Add some randomness
+  
+  // Determine AQI level
+  let aqiLevel = '';
+  if (aqi <= 50) aqiLevel = 'Good';
+  else if (aqi <= 100) aqiLevel = 'Satisfactory';
+  else if (aqi <= 200) aqiLevel = 'Moderately Polluted';
+  else if (aqi <= 300) aqiLevel = 'Poor';
+  else if (aqi <= 400) aqiLevel = 'Very Poor';
+  else aqiLevel = 'Severe';
+  
+  // Calculate disruption probability based on rainfall and AQI
+  // Rainfall > 50mm OR AQI > 200 = High risk
+  // Rainfall 20-50mm = Medium risk
+  // Else = Low risk
+  let disruptionProbability = 0;
+  let aiRiskLevel: 'low' | 'medium' | 'high' = 'low';
+  
+  if (rainfall > 50 || aqi > 200) {
+    // High risk: 70-95% disruption probability
+    disruptionProbability = Math.round(70 + Math.random() * 25);
+    aiRiskLevel = 'high';
+  } else if (rainfall >= 20 && rainfall <= 50) {
+    // Medium risk: 40-70% disruption probability
+    disruptionProbability = Math.round(40 + Math.random() * 30);
+    aiRiskLevel = 'medium';
+  } else {
+    // Low risk: 5-30% disruption probability
+    disruptionProbability = Math.round(Math.random() * 25);
+    aiRiskLevel = 'low';
+  }
+  
+  return {
+    aqi,
+    aqiLevel,
+    disruptionProbability,
+    aiRiskLevel
   };
 }
 

@@ -114,6 +114,10 @@ export const api = {
           rainfall: z.number(),
           severity: z.string(),
           riskLevel: z.enum(['low', 'medium', 'high', 'extreme']),
+          aqi: z.number(),
+          aqiLevel: z.string(),
+          disruptionProbability: z.number(),
+          aiRiskLevel: z.enum(['low', 'medium', 'high']),
         }),
         404: errorSchemas.notFound
       }
