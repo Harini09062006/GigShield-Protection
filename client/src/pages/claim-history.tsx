@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useLocation } from "wouter";
 import { useWorker, useWorkerClaims } from "@/hooks/use-gigshield";
 import { Layout } from "@/components/layout";
-import { CheckCircle2, Clock, AlertCircle, Wallet, Calendar, FileText } from "lucide-react";
+import { ShieldCheck, ShieldAlert, ShieldX, CheckCircle2, Clock, AlertCircle, Wallet, Calendar, FileText } from "lucide-react";
 import { Card } from "@/components/ui/card";
 
 export default function ClaimHistory() {
@@ -24,6 +24,7 @@ export default function ClaimHistory() {
       case 'paid': return <CheckCircle2 size={20} className="text-green-600" />;
       case 'approved': return <CheckCircle2 size={20} className="text-blue-600" />;
       case 'pending': return <Clock size={20} className="text-yellow-600" />;
+      case 'rejected': return <ShieldX size={20} className="text-red-600" />;
       default: return <AlertCircle size={20} className="text-gray-600" />;
     }
   };
@@ -33,8 +34,49 @@ export default function ClaimHistory() {
       case 'paid': return 'bg-green-100 text-green-700';
       case 'approved': return 'bg-blue-100 text-blue-700';
       case 'pending': return 'bg-yellow-100 text-yellow-700';
+      case 'rejected': return 'bg-red-100 text-red-700';
       default: return 'bg-gray-100 text-gray-700';
     }
+  };
+
+  const renderFraudStatus = (claim: any) => {
+    if (!claim.fraudStatus) return null;
+    
+    const details = claim.fraudDetails ? JSON.parse(claim.fraudDetails) : {};
+    
+    return (
+      <div className="mt-4 pt-4 border-t border-border/50">
+        <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1">
+          {claim.fraudStatus === 'verified' ? <ShieldCheck size={12} className="text-green-600" /> : <ShieldAlert size={12} className="text-red-600" />}
+          Fraud Detection Status: {claim.fraudStatus === 'verified' ? 'Passed' : 'Action Required'}
+        </h4>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <div className="flex items-center justify-between bg-secondary/20 p-2 rounded-lg text-[10px]">
+            <span className="text-muted-foreground">GPS Validation</span>
+            <span className={`font-bold ${details.gps === 'Verified' ? 'text-green-600' : 'text-red-600'}`}>
+              {details.gps || 'Pending'}
+            </span>
+          </div>
+          <div className="flex items-center justify-between bg-secondary/20 p-2 rounded-lg text-[10px]">
+            <span className="text-muted-foreground">Weather Event</span>
+            <span className={`font-bold ${details.weather === 'Confirmed' ? 'text-green-600' : 'text-red-600'}`}>
+              {details.weather || 'Pending'}
+            </span>
+          </div>
+          <div className="flex items-center justify-between bg-secondary/20 p-2 rounded-lg text-[10px]">
+            <span className="text-muted-foreground">Duplicate Check</span>
+            <span className={`font-bold ${details.duplicate === 'Passed' ? 'text-green-600' : 'text-red-600'}`}>
+              {details.duplicate || 'Pending'}
+            </span>
+          </div>
+        </div>
+        {claim.status === 'rejected' && (
+          <p className="mt-2 text-xs font-bold text-red-600 bg-red-50 p-2 rounded border border-red-100">
+            Claim Rejected: {details.gps !== 'Verified' ? 'Location mismatch detected' : 'Verification failed'}
+          </p>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -92,6 +134,8 @@ export default function ClaimHistory() {
                           <span className="font-mono font-bold text-foreground">#{claim.id.toString().padStart(5, '0')}</span>
                         </div>
                       </div>
+                      
+                      {renderFraudStatus(claim)}
                     </div>
 
                     {/* Right: Amount & Status */}

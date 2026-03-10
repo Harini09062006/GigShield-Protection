@@ -36,7 +36,9 @@ export const claims = pgTable("claims", {
   planId: integer("plan_id").notNull(),
   amount: integer("amount").notNull(),
   reason: text("reason").notNull(),
-  status: text("status").notNull().default('pending'), // pending, approved, paid
+  status: text("status").notNull().default('pending'), // pending, approved, paid, rejected
+  fraudStatus: text("fraud_status").default('pending'), // pending, verified, suspicious, failed
+  fraudDetails: text("fraud_details"), // JSON string or text details
   createdAt: timestamp("created_at").defaultNow(),
 });
 

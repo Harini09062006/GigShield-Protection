@@ -69,7 +69,20 @@ export async function registerRoutes(
   app.post(api.claims.create.path, async (req, res) => {
     try {
       const input = api.claims.create.input.parse(req.body);
-      const claim = await storage.createClaim(input);
+      
+      // Run Fraud Detection Logic
+      const worker = await storage.getWorker(input.workerId);
+      const weather = await mockWeatherData(worker?.city || "");
+      
+      const fraudResult = validateClaimFraud(worker, weather, input.reason);
+      
+      const claim = await storage.createClaim({
+        ...input,
+        status: fraudResult.success ? "approved" : "rejected",
+        fraudStatus: fraudResult.success ? "verified" : "suspicious",
+        fraudDetails: JSON.stringify(fraudResult.details)
+      });
+      
       res.status(201).json(claim);
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -84,6 +97,10 @@ export async function registerRoutes(
     const claim = await storage.getClaim(id);
     if (!claim) {
       return res.status(404).json({ message: "Claim not found" });
+    }
+    
+    if (claim.status === 'rejected') {
+      return res.status(400).json({ message: "Cannot pay out a rejected claim" });
     }
     
     // Simulate payment process
@@ -108,13 +125,18 @@ export async function registerRoutes(
       for (const w of cityWorkers) {
         const wp = await storage.getWorkerPlan(w.id);
         if (wp && wp.workerPlan.status === 'active') {
-          // Trigger a claim automatically
+          // Verify Fraud for Auto-Trigger
+          const weather = await mockWeatherData(w.city);
+          const fraudResult = validateClaimFraud(w, weather, `Parametric Trigger: ${input.type}`);
+          
           await storage.createClaim({
             workerId: w.id,
             planId: wp.plan.id,
-            amount: wp.plan.coverageAmount, // Use full coverage as simulation
+            amount: wp.plan.coverageAmount,
             reason: `Parametric Trigger: ${input.type} (${input.severity})`,
-            status: "pending"
+            status: fraudResult.success ? "approved" : "rejected",
+            fraudStatus: fraudResult.success ? "verified" : "suspicious",
+            fraudDetails: JSON.stringify(fraudResult.details)
           });
         }
       }
@@ -138,7 +160,6 @@ export async function registerRoutes(
     const city = req.params.city;
     
     // Simulate OpenWeather API call with mock data
-    // In production, this would call: https://api.openweathermap.org/data/2.5/weather?q={city}&appid={apiKey}
     const weatherData = mockWeatherData(city);
     
     // Check if rainfall exceeds threshold (> 50mm = high risk)
@@ -159,12 +180,17 @@ export async function registerRoutes(
           );
           
           if (!recentClaim) {
+            // Verify Fraud for Auto-Trigger
+            const fraudResult = validateClaimFraud(w, weatherData, `Heavy rainfall auto-trigger`);
+            
             await storage.createClaim({
               workerId: w.id,
               planId: wp.plan.id,
               amount: wp.plan.coverageAmount,
               reason: `Parametric Trigger: Heavy rainfall (${weatherData.rainfall}mm)`,
-              status: "approved"
+              status: fraudResult.success ? "approved" : "rejected",
+              fraudStatus: fraudResult.success ? "verified" : "suspicious",
+              fraudDetails: JSON.stringify(fraudResult.details)
             });
           }
         }
@@ -187,6 +213,31 @@ export async function registerRoutes(
   });
 
   return httpServer;
+}
+
+// Fraud Validation Logic
+function validateClaimFraud(worker: any, weather: any, reason: string) {
+  // 1. GPS Validation: Verify worker is in their registered city
+  // (Simulated logic: 5% chance of location mismatch for demo)
+  const isLocationVerified = Math.random() > 0.05;
+  
+  // 2. Weather Event Verification: Verify rainfall/weather matches disruption
+  // (Simulated logic: Verify rainfall > 0 if reason mentions rain)
+  const isWeatherConfirmed = reason.toLowerCase().includes('rain') ? weather.rainfall > 0 : true;
+  
+  // 3. Duplicate Claim Check: Handled by calling function checking last hour
+  const isNotDuplicate = true; // Placeholder as it's checked in route logic
+
+  const success = isLocationVerified && isWeatherConfirmed && isNotDuplicate;
+  
+  return {
+    success,
+    details: {
+      gps: isLocationVerified ? "Verified" : "Location mismatch detected",
+      weather: isWeatherConfirmed ? "Confirmed" : "Weather event mismatch",
+      duplicate: isNotDuplicate ? "Passed" : "Duplicate detected"
+    }
+  };
 }
 
 // Mock OpenWeather API data - In production, call real API

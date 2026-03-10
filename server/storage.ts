@@ -89,7 +89,7 @@ export class DatabaseStorage implements IStorage {
   async getWorkerClaims(workerId: number): Promise<Claim[]> {
     return await db.select().from(claims).where(eq(claims.workerId, workerId)).orderBy(desc(claims.createdAt));
   }
-  async createClaim(claim: InsertClaim): Promise<Claim> {
+  async createClaim(claim: InsertClaim & { fraudStatus?: string, fraudDetails?: string }): Promise<Claim> {
     const [newClaim] = await db.insert(claims).values(claim).returning();
     return newClaim;
   }
