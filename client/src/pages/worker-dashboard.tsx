@@ -8,7 +8,7 @@ import {
 import { Layout } from "@/components/layout";
 import { 
   ShieldCheck, AlertTriangle, CloudRain, Wind, 
-  Activity, CheckCircle2, Clock, Wallet, Info, Droplets, ArrowRight, Brain, TrendingUp
+  Activity, CheckCircle2, Clock, Wallet, Info, Droplets, ArrowRight, Brain, TrendingUp, AlertCircle, MapPin
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -266,6 +266,39 @@ export default function WorkerDashboard() {
           )}
         </Card>
       </div>
+
+      {/* Disruption Alerts Section */}
+      {weatherData?.activeDisruptions && weatherData.activeDisruptions.length > 0 && (
+        <div className="mb-8 animate-in fade-in slide-in-from-left-4 duration-500">
+          <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+            <AlertCircle className="text-destructive" size={24} />
+            Active Disruption Alerts
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {weatherData.activeDisruptions.map((alert, idx) => (
+              <Card key={idx} className="p-5 border-l-4 border-l-destructive bg-destructive/5 relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-4 opacity-10">
+                  <AlertTriangle size={48} />
+                </div>
+                <div className="relative z-10">
+                  <p className="text-xs font-bold text-destructive uppercase tracking-wider mb-1">{alert.type}</p>
+                  <h4 className="text-lg font-bold text-foreground mb-3">{alert.detail}</h4>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium bg-destructive/10 text-destructive px-2 py-1 rounded-full">
+                      Impact: {alert.impact}
+                    </span>
+                    {alert.triggered && (
+                      <span className="text-[10px] font-bold text-green-600 flex items-center gap-1">
+                        <CheckCircle2 size={12} /> Insurance Triggered
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Claims Summary & Quick Link */}
       <Card className="rounded-3xl p-6 md:p-8 bg-gradient-to-br from-primary/5 to-secondary/5">

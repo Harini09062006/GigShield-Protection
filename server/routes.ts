@@ -222,6 +222,86 @@ export async function registerRoutes(
     // Calculate AI predictions
     const aiPrediction = calculateAIRiskPrediction(weatherData.rainfall);
     
+    // Check for other disruption types (Simulated logic)
+    const isFlood = weatherData.rainfall > 70; // Heavy rain usually causes flood in this simulation
+    const isCurfew = Math.random() < 0.02; // 2% chance of curfew for demo
+    
+    const activeDisruptions = [];
+    
+    if (weatherData.rainfall > 50) {
+      activeDisruptions.push({
+        type: "Heavy Rain",
+        detail: `${weatherData.rainfall}mm rainfall`,
+        impact: "High" as const,
+        triggered: true
+      });
+    }
+    
+    if (isFlood) {
+      activeDisruptions.push({
+        type: "Flood",
+        detail: "Waterlogging detected in low-lying areas",
+        impact: "High" as const,
+        triggered: true
+      });
+    }
+    
+    if (aiPrediction.aqi > 200) {
+      activeDisruptions.push({
+        type: "Severe Pollution",
+        detail: `AQI: ${aiPrediction.aqi}`,
+        impact: "High" as const,
+        triggered: true
+      });
+    }
+    
+    if (isCurfew) {
+      activeDisruptions.push({
+        type: "Curfew / Zone Closure",
+        detail: "Restricted movement in selected zones",
+        impact: "High" as const,
+        triggered: true
+      });
+    }
+
+    // Auto-trigger claims for NEW disruption types
+    if (isFlood || aiPrediction.aqi > 200 || isCurfew) {
+      const workersList = await storage.getWorkers();
+      const cityWorkers = workersList.filter(w => w.city.toLowerCase() === city.toLowerCase());
+      
+      for (const w of cityWorkers) {
+        const wp = await storage.getWorkerPlan(w.id);
+        if (wp && wp.workerPlan.status === 'active') {
+          const existingClaims = await storage.getWorkerClaims(w.id);
+          const type = isFlood ? "Flood" : aiPrediction.aqi > 200 ? "Pollution" : "Curfew";
+          const recentClaim = existingClaims.find(c => 
+            c.reason.toLowerCase().includes(type.toLowerCase()) && 
+            c.createdAt && new Date(c.createdAt).getTime() > Date.now() - 3600000
+          );
+          
+          if (!recentClaim) {
+            const fraudResult = validateClaimFraud(w, { ...weatherData, aqi: aiPrediction.aqi, isCurfew, isFlood }, `Parametric Trigger: ${type}`);
+            
+            const hourlyRate = w.hourlyRate || 6000;
+            const hoursLost = isFlood ? 6 : isCurfew ? 8 : 4;
+            const incomeLoss = hoursLost * hourlyRate;
+
+            await storage.createClaim({
+              workerId: w.id,
+              planId: wp.plan.id,
+              amount: incomeLoss,
+              hoursLost,
+              hourlyRateAtClaim: hourlyRate,
+              reason: `Parametric Trigger: ${type} disruption`,
+              status: fraudResult.success ? "approved" : "rejected",
+              fraudStatus: fraudResult.success ? "verified" : "suspicious",
+              fraudDetails: JSON.stringify(fraudResult.details)
+            });
+          }
+        }
+      }
+    }
+    
     res.json({
       city,
       rainfall: weatherData.rainfall,
@@ -230,7 +310,8 @@ export async function registerRoutes(
       aqi: aiPrediction.aqi,
       aqiLevel: aiPrediction.aqiLevel,
       disruptionProbability: aiPrediction.disruptionProbability,
-      aiRiskLevel: aiPrediction.aiRiskLevel
+      aiRiskLevel: aiPrediction.aiRiskLevel,
+      activeDisruptions
     });
   });
 

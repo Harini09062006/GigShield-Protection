@@ -118,6 +118,12 @@ export const api = {
           aqiLevel: z.string(),
           disruptionProbability: z.number(),
           aiRiskLevel: z.enum(['low', 'medium', 'high']),
+          activeDisruptions: z.array(z.object({
+            type: z.string(),
+            detail: z.string(),
+            impact: z.enum(['Low', 'Medium', 'High']),
+            triggered: z.boolean()
+          })).optional(),
         }),
         404: errorSchemas.notFound
       }
