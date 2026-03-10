@@ -9,6 +9,7 @@ export const workers = pgTable("workers", {
   phone: text("phone").notNull(),
   platform: text("platform").notNull(), // Swiggy, Zomato, Amazon, etc.
   city: text("city").notNull(),
+  hourlyRate: integer("hourly_rate").default(6000).notNull(), // in cents/paise (₹60)
   lat: numeric("lat"),
   lng: numeric("lng"),
   createdAt: timestamp("created_at").defaultNow(),
@@ -35,6 +36,8 @@ export const claims = pgTable("claims", {
   workerId: integer("worker_id").notNull(),
   planId: integer("plan_id").notNull(),
   amount: integer("amount").notNull(),
+  hoursLost: integer("hours_lost").default(0),
+  hourlyRateAtClaim: integer("hourly_rate_at_claim").default(6000),
   reason: text("reason").notNull(),
   status: text("status").notNull().default('pending'), // pending, approved, paid, rejected
   fraudStatus: text("fraud_status").default('pending'), // pending, verified, suspicious, failed

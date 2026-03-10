@@ -13,6 +13,7 @@ export default function WorkerRegister() {
     phone: "",
     platform: "Swiggy",
     city: "Mumbai",
+    hourlyRate: 6000,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -104,8 +105,22 @@ export default function WorkerRegister() {
               <option value="Delhi">Delhi</option>
               <option value="Chennai">Chennai</option>
             </select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-semibold flex items-center gap-2">
+              <Wallet size={16} className="text-primary"/> Avg. Hourly Earnings (₹)
+            </label>
+            <input 
+              required
+              type="number"
+              value={formData.hourlyRate / 100}
+              onChange={(e) => setFormData({...formData, hourlyRate: parseInt(e.target.value) * 100 || 6000})}
+              className="w-full px-4 py-3 rounded-xl bg-background border-2 border-border focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all"
+              placeholder="60"
+            />
             <p className="text-xs text-muted-foreground mt-1">
-              Your parametric triggers will be based on weather data for this city.
+              Used to calculate parametric payouts based on hours lost.
             </p>
           </div>
 

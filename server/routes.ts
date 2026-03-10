@@ -76,8 +76,16 @@ export async function registerRoutes(
       
       const fraudResult = validateClaimFraud(worker, weather, input.reason);
       
+      // Calculate income loss based on disruption
+      const hourlyRate = worker?.hourlyRate || 6000;
+      const hoursLost = Math.floor(Math.random() * 4) + 1; // Simulated 1-4 hours
+      const incomeLoss = hoursLost * hourlyRate;
+
       const claim = await storage.createClaim({
         ...input,
+        amount: incomeLoss,
+        hoursLost,
+        hourlyRateAtClaim: hourlyRate,
         status: fraudResult.success ? "approved" : "rejected",
         fraudStatus: fraudResult.success ? "verified" : "suspicious",
         fraudDetails: JSON.stringify(fraudResult.details)
@@ -129,10 +137,17 @@ export async function registerRoutes(
           const weather = await mockWeatherData(w.city);
           const fraudResult = validateClaimFraud(w, weather, `Parametric Trigger: ${input.type}`);
           
+          // Calculate income loss
+          const hourlyRate = w.hourlyRate || 6000;
+          const hoursLost = input.severity === 'severe' ? 4 : 2;
+          const incomeLoss = hoursLost * hourlyRate;
+
           await storage.createClaim({
             workerId: w.id,
             planId: wp.plan.id,
-            amount: wp.plan.coverageAmount,
+            amount: incomeLoss,
+            hoursLost,
+            hourlyRateAtClaim: hourlyRate,
             reason: `Parametric Trigger: ${input.type} (${input.severity})`,
             status: fraudResult.success ? "approved" : "rejected",
             fraudStatus: fraudResult.success ? "verified" : "suspicious",
@@ -183,10 +198,17 @@ export async function registerRoutes(
             // Verify Fraud for Auto-Trigger
             const fraudResult = validateClaimFraud(w, weatherData, `Heavy rainfall auto-trigger`);
             
+            // Calculate income loss
+            const hourlyRate = w.hourlyRate || 6000;
+            const hoursLost = weatherData.rainfall > 75 ? 5 : 3;
+            const incomeLoss = hoursLost * hourlyRate;
+
             await storage.createClaim({
               workerId: w.id,
               planId: wp.plan.id,
-              amount: wp.plan.coverageAmount,
+              amount: incomeLoss,
+              hoursLost,
+              hourlyRateAtClaim: hourlyRate,
               reason: `Parametric Trigger: Heavy rainfall (${weatherData.rainfall}mm)`,
               status: fraudResult.success ? "approved" : "rejected",
               fraudStatus: fraudResult.success ? "verified" : "suspicious",

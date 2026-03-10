@@ -280,6 +280,12 @@ export default function WorkerDashboard() {
                 : `You have ${claims.length} claim${claims.length > 1 ? 's' : ''} on record`
               }
             </p>
+            {worker?.hourlyRate && (
+              <div className="mt-4 p-3 bg-white rounded-xl border border-border/50 inline-block">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase mb-1">Worker Earnings Model</p>
+                <p className="text-sm font-bold text-foreground">Avg. Hourly Income: <span className="text-primary">₹{worker.hourlyRate / 100}</span></p>
+              </div>
+            )}
           </div>
           <Link href="/claims">
             <Button className="gap-2 whitespace-nowrap">
@@ -289,18 +295,22 @@ export default function WorkerDashboard() {
         </div>
 
         {claims && claims.length > 0 && (
-          <div className="grid grid-cols-3 gap-3 mt-6 pt-6 border-t border-border">
-            <div className="text-center">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6 pt-6 border-t border-border">
+            <div className="text-center p-3 bg-white rounded-2xl border border-border/50">
               <p className="text-2xl font-bold text-primary">{claims.length}</p>
               <p className="text-xs text-muted-foreground mt-1">Total Claims</p>
             </div>
-            <div className="text-center">
+            <div className="text-center p-3 bg-white rounded-2xl border border-border/50">
               <p className="text-2xl font-bold text-green-600">₹{claims.filter(c => c.status === 'paid').reduce((sum, c) => sum + c.amount, 0) / 100}</p>
-              <p className="text-xs text-muted-foreground mt-1">Paid Out</p>
+              <p className="text-xs text-muted-foreground mt-1">Total Payout</p>
             </div>
-            <div className="text-center">
-              <p className="text-2xl font-bold text-blue-600">{claims.filter(c => c.status === 'pending' || c.status === 'approved').length}</p>
-              <p className="text-xs text-muted-foreground mt-1">Processing</p>
+            <div className="text-center p-3 bg-white rounded-2xl border border-border/50">
+              <p className="text-2xl font-bold text-blue-600">{claims.reduce((sum, c) => sum + (c.hoursLost || 0), 0)}</p>
+              <p className="text-xs text-muted-foreground mt-1">Total Hours Lost</p>
+            </div>
+            <div className="text-center p-3 bg-white rounded-2xl border border-border/50">
+              <p className="text-2xl font-bold text-purple-600">₹{(claims.filter(c => c.status === 'paid').reduce((sum, c) => sum + c.amount, 0) / (claims.reduce((sum, c) => sum + (c.hoursLost || 1), 0) || 1)).toFixed(0)}</p>
+              <p className="text-xs text-muted-foreground mt-1">Avg. Payout/Hr</p>
             </div>
           </div>
         )}

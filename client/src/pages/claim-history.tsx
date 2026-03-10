@@ -133,6 +133,21 @@ export default function ClaimHistory() {
                           <span className="text-sm text-muted-foreground">Claim ID</span>
                           <span className="font-mono font-bold text-foreground">#{claim.id.toString().padStart(5, '0')}</span>
                         </div>
+                        {claim.hoursLost && (
+                          <div className="pt-2 border-t border-border/50">
+                            <p className="text-[10px] font-bold text-muted-foreground uppercase mb-2">Income Loss Calculation</p>
+                            <div className="grid grid-cols-2 gap-2 text-xs">
+                              <div>
+                                <p className="text-muted-foreground">Hourly Rate</p>
+                                <p className="font-bold text-foreground">₹{claim.hourlyRateAtClaim / 100}</p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground">Hours Lost</p>
+                                <p className="font-bold text-foreground">{claim.hoursLost}</p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
                       
                       {renderFraudStatus(claim)}
