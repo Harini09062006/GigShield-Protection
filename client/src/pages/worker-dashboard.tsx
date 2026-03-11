@@ -8,7 +8,7 @@ import {
 import { Layout } from "@/components/layout";
 import { 
   ShieldCheck, AlertTriangle, CloudRain, Wind, 
-  Activity, CheckCircle2, Clock, Wallet, Info, Droplets, ArrowRight, Brain, TrendingUp, AlertCircle, MapPin
+  Activity, CheckCircle2, Clock, Wallet, Info, Droplets, ArrowRight, Brain, TrendingUp, AlertCircle, MapPin, Shield
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -298,6 +298,62 @@ export default function WorkerDashboard() {
             ))}
           </div>
         </div>
+      )}
+
+      {/* Earnings Protection Summary */}
+      {planData && worker && (
+        <Card className="mb-8 rounded-3xl p-6 md:p-8 bg-gradient-to-br from-indigo-50 to-blue-50 border-l-4 border-l-indigo-600">
+          <div className="flex items-start justify-between mb-6">
+            <div>
+              <h3 className="text-xl font-bold mb-1 flex items-center gap-2">
+                <Shield size={22} className="text-indigo-600" />
+                Earnings Protection Summary
+              </h3>
+              <p className="text-sm text-muted-foreground">Your parametric insurance coverage analysis</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Potential Income Loss */}
+            <div className="bg-white rounded-2xl p-4 border border-border/50">
+              <p className="text-xs font-bold text-muted-foreground uppercase mb-2 tracking-wider">Potential Income Loss</p>
+              <p className="text-3xl font-bold text-amber-600">₹{(worker.hourlyRate * 6) / 100}</p>
+              <p className="text-[10px] text-muted-foreground mt-2">Based on 6 hours × ₹{worker.hourlyRate / 100}/hr</p>
+            </div>
+
+            {/* Insurance Coverage Amount */}
+            <div className="bg-white rounded-2xl p-4 border border-border/50">
+              <p className="text-xs font-bold text-muted-foreground uppercase mb-2 tracking-wider">Insurance Coverage</p>
+              <p className="text-3xl font-bold text-green-600">₹{planData.plan.coverageAmount / 100}</p>
+              <p className="text-[10px] text-muted-foreground mt-2">{planData.plan.name} max payout</p>
+            </div>
+
+            {/* Remaining Risk */}
+            <div className="bg-white rounded-2xl p-4 border border-border/50">
+              <p className="text-xs font-bold text-muted-foreground uppercase mb-2 tracking-wider">Remaining Risk</p>
+              <p className={`text-3xl font-bold ${
+                (worker.hourlyRate * 6) - planData.plan.coverageAmount > 0 
+                  ? 'text-red-600' 
+                  : 'text-green-600'
+              }`}>
+                ₹{Math.max(0, (worker.hourlyRate * 6 - planData.plan.coverageAmount) / 100)}
+              </p>
+              <p className="text-[10px] text-muted-foreground mt-2">
+                {(worker.hourlyRate * 6) > planData.plan.coverageAmount 
+                  ? "Unprotected amount" 
+                  : "Fully covered"}
+              </p>
+            </div>
+          </div>
+
+          {(worker.hourlyRate * 6) > planData.plan.coverageAmount && (
+            <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-xl">
+              <p className="text-xs font-medium text-amber-800">
+                <span className="font-bold">⚠️ Tip:</span> Consider upgrading to a higher plan to cover potential income losses completely.
+              </p>
+            </div>
+          )}
+        </Card>
       )}
 
       {/* Claims Summary & Quick Link */}
