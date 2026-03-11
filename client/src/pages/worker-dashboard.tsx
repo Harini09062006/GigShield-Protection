@@ -92,6 +92,41 @@ export default function WorkerDashboard() {
   const activeDisruptions = disruptions?.filter(d => d.active) || [];
   const hasAlert = activeDisruptions.length > 0;
 
+  // Generate safety alerts based on weather predictions
+  const safetyAlerts = [];
+  if (weatherData) {
+    if (weatherData.rainfall > 50) {
+      safetyAlerts.push({
+        id: 'heavy-rain',
+        type: 'Heavy Rain',
+        message: `Heavy rain expected in the next 2 hours. Rainfall: ${weatherData.rainfall}mm. Delivery disruption risk is high.`,
+        icon: CloudRain,
+        color: 'from-blue-500 to-cyan-500',
+        bgColor: 'bg-blue-50'
+      });
+    }
+    if (weatherData.rainfall > 70) {
+      safetyAlerts.push({
+        id: 'flood',
+        type: 'Flood Risk',
+        message: `Flood risk detected in your delivery area. Water level is rising. Avoid low-lying zones.`,
+        icon: Droplets,
+        color: 'from-cyan-600 to-blue-600',
+        bgColor: 'bg-cyan-50'
+      });
+    }
+    if (weatherData.aqi > 200) {
+      safetyAlerts.push({
+        id: 'pollution',
+        type: 'Severe Air Pollution',
+        message: `Air Quality Index exceeds 200. Air pollution is severe. Use protective gear and stay safe.`,
+        icon: Wind,
+        color: 'from-orange-500 to-red-500',
+        bgColor: 'bg-orange-50'
+      });
+    }
+  }
+
   return (
     <Layout isWorker>
       <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
@@ -111,6 +146,36 @@ export default function WorkerDashboard() {
           {simulating ? simulationStep : "Simulate Severe Weather"}
         </button>
       </div>
+
+      {/* Worker Safety Alerts (Before Claims are Triggered) */}
+      {safetyAlerts.length > 0 && (
+        <div className="mb-8 space-y-4">
+          {safetyAlerts.map((alert) => {
+            const IconComponent = alert.icon;
+            return (
+              <div key={alert.id} className={`${alert.bgColor} border-l-4 border-l-yellow-500 rounded-[12px] p-5 shadow-md animate-in fade-in slide-in-from-top-2 duration-500`}>
+                <div className="flex items-start gap-4">
+                  <div className={`p-2 rounded-lg bg-gradient-to-r ${alert.color} text-white flex-shrink-0`}>
+                    <IconComponent size={24} />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-bold text-lg text-foreground mb-1">⚠️ {alert.type}</h3>
+                    <p className="text-sm text-foreground/80">{alert.message}</p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800">
+                        <AlertTriangle size={14} /> Pre-Alert Active
+                      </span>
+                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+                        Insurance Protection: Active
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Real-Time Disruption Alert Panel */}
       {weatherData?.activeDisruptions && weatherData.activeDisruptions.length > 0 && (
