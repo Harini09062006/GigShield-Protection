@@ -110,61 +110,60 @@ export default function WorkerDashboard() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 auto-rows-max">
         {/* Active Protection Card */}
-        <div className="rounded-[16px] p-6 bg-gradient-to-br from-primary to-indigo-600 text-white shadow-md hover:shadow-lg transition-shadow flex flex-col h-80">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-bold">Active Protection</h3>
-            <ShieldCheck size={24} />
+        <div className="w-full aspect-square rounded-[16px] p-6 bg-gradient-to-br from-primary to-indigo-600 text-white shadow-md hover:shadow-lg transition-shadow flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold">Active Protection</h3>
+              <ShieldCheck size={24} />
+            </div>
+            <p className="text-sm text-blue-100 font-medium mb-1">{planData.plan.name}</p>
+            <p className="text-xs text-blue-100">{planData.plan.description}</p>
           </div>
 
-          <div className="flex-1 flex flex-col justify-between">
-            <div>
-              <p className="text-sm text-blue-100 mb-3 font-medium">{planData.plan.name}</p>
-              <p className="text-sm text-blue-100 line-clamp-2 mb-6">{planData.plan.description}</p>
+          <div className="space-y-2">
+            <div className="bg-white/15 rounded-[12px] p-3 backdrop-blur-sm">
+              <p className="text-xs text-blue-100 font-medium mb-1">Max Payout</p>
+              <p className="text-xl font-bold">₹{planData.plan.coverageAmount / 100}</p>
             </div>
-
-            <div className="space-y-3">
-              <div className="bg-white/15 rounded-[12px] p-4 backdrop-blur-sm">
-                <p className="text-xs text-blue-100 font-medium mb-2">Max Payout / Event</p>
-                <p className="text-2xl font-bold">₹{planData.plan.coverageAmount / 100}</p>
-              </div>
-              <div className="bg-white/15 rounded-[12px] p-4 backdrop-blur-sm">
-                <p className="text-xs text-blue-100 font-medium mb-2">Weekly Premium</p>
-                <p className="text-2xl font-bold">₹{planData.plan.weeklyPremium / 100}</p>
-              </div>
+            <div className="bg-white/15 rounded-[12px] p-3 backdrop-blur-sm">
+              <p className="text-xs text-blue-100 font-medium mb-1">Weekly Premium</p>
+              <p className="text-xl font-bold">₹{planData.plan.weeklyPremium / 100}</p>
             </div>
           </div>
         </div>
 
         {/* AI Risk Prediction Card */}
-        <div className="rounded-[16px] p-6 bg-gradient-to-br from-purple-50 to-blue-50 shadow-md hover:shadow-lg transition-shadow flex flex-col h-80 border border-purple-100">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-bold text-foreground">AI Risk Prediction</h3>
-            <Brain size={24} className="text-purple-600" />
+        <div className="w-full aspect-square rounded-[16px] p-6 bg-gradient-to-br from-purple-50 to-blue-50 shadow-md hover:shadow-lg transition-shadow flex flex-col justify-between border border-purple-100">
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-foreground">AI Risk Prediction</h3>
+              <Brain size={24} className="text-purple-600" />
+            </div>
           </div>
 
           {weatherData ? (
-            <div className="flex-1 flex flex-col justify-between space-y-3">
-              <div className="bg-white rounded-[12px] p-4">
-                <p className="text-xs text-muted-foreground font-medium mb-2">Rainfall</p>
-                <p className="text-2xl font-bold text-foreground">{weatherData.rainfall}mm</p>
+            <div className="flex-1 flex flex-col justify-between space-y-2">
+              <div className="bg-white rounded-[12px] p-3">
+                <p className="text-xs text-muted-foreground font-medium">Rainfall</p>
+                <p className="text-xl font-bold text-foreground">{weatherData.rainfall}mm</p>
               </div>
 
-              <div className="bg-white rounded-[12px] p-4">
-                <p className="text-xs text-muted-foreground font-medium mb-2">AQI Level</p>
+              <div className="bg-white rounded-[12px] p-3">
+                <p className="text-xs text-muted-foreground font-medium">AQI</p>
                 <div className="flex items-baseline gap-2">
-                  <p className="text-2xl font-bold text-foreground">{weatherData.aqi}</p>
+                  <p className="text-xl font-bold text-foreground">{weatherData.aqi}</p>
                   <p className="text-xs text-muted-foreground">{weatherData.aqiLevel}</p>
                 </div>
               </div>
 
-              <div className="bg-white rounded-[12px] p-4">
-                <p className="text-xs text-muted-foreground font-medium mb-2">Disruption Probability</p>
-                <p className="text-2xl font-bold text-foreground mb-2">{weatherData.disruptionProbability}%</p>
-                <div className="w-full bg-gray-200 rounded-full h-1.5">
+              <div className="bg-white rounded-[12px] p-3">
+                <p className="text-xs text-muted-foreground font-medium">Disruption</p>
+                <p className="text-xl font-bold text-foreground mb-1">{weatherData.disruptionProbability}%</p>
+                <div className="w-full bg-gray-200 rounded-full h-1">
                   <div 
-                    className={`h-1.5 rounded-full ${
+                    className={`h-1 rounded-full ${
                       weatherData.disruptionProbability >= 70 ? 'bg-red-500' :
                       weatherData.disruptionProbability >= 40 ? 'bg-yellow-500' :
                       'bg-green-500'
@@ -175,35 +174,37 @@ export default function WorkerDashboard() {
               </div>
             </div>
           ) : (
-            <div className="flex-1 flex items-center justify-center">
-              <Brain className="text-muted-foreground opacity-30" size={48} />
+            <div className="flex items-center justify-center">
+              <Brain className="text-muted-foreground opacity-30" size={40} />
             </div>
           )}
         </div>
 
         {/* Weather Risk Level Card */}
-        <div className={`rounded-[16px] p-6 shadow-md hover:shadow-lg transition-shadow flex flex-col h-80 border ${
+        <div className={`w-full aspect-square rounded-[16px] p-6 shadow-md hover:shadow-lg transition-shadow flex flex-col justify-between border ${
           weatherData?.riskLevel === 'extreme' || weatherData?.riskLevel === 'high' 
             ? 'bg-red-50 border-red-200' 
             : weatherData?.riskLevel === 'medium'
             ? 'bg-yellow-50 border-yellow-200'
             : 'bg-green-50 border-green-200'
         }`}>
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-bold text-foreground">Weather Risk Level</h3>
-            <Droplets size={24} className={weatherData?.riskLevel === 'low' ? 'text-green-600' : weatherData?.riskLevel === 'medium' ? 'text-yellow-600' : 'text-red-600'} />
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-foreground">Weather Risk</h3>
+              <Droplets size={24} className={weatherData?.riskLevel === 'low' ? 'text-green-600' : weatherData?.riskLevel === 'medium' ? 'text-yellow-600' : 'text-red-600'} />
+            </div>
           </div>
 
           {weatherData ? (
-            <div className="flex-1 flex flex-col justify-between space-y-3">
-              <div className="bg-white rounded-[12px] p-4">
-                <div className="flex items-center justify-between mb-3">
+            <div className="flex-1 flex flex-col justify-between space-y-2">
+              <div className="bg-white rounded-[12px] p-3">
+                <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-medium text-muted-foreground">Rainfall</span>
-                  <span className="font-bold text-foreground">{weatherData.rainfall}mm</span>
+                  <span className="font-bold text-sm text-foreground">{weatherData.rainfall}mm</span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-1.5">
+                <div className="w-full bg-gray-200 rounded-full h-1">
                   <div 
-                    className={`h-1.5 rounded-full ${
+                    className={`h-1 rounded-full ${
                       weatherData.riskLevel === 'low' ? 'bg-green-500' : 
                       weatherData.riskLevel === 'medium' ? 'bg-yellow-500' : 
                       weatherData.riskLevel === 'high' ? 'bg-orange-500' : 'bg-red-600'
@@ -213,11 +214,11 @@ export default function WorkerDashboard() {
                 </div>
               </div>
 
-              <div className="bg-white rounded-[12px] p-4">
-                <p className="text-xs text-muted-foreground font-medium mb-2">Severity</p>
+              <div className="bg-white rounded-[12px] p-3">
+                <p className="text-xs text-muted-foreground font-medium mb-1">Severity</p>
                 <div className="flex items-center justify-between">
-                  <p className="font-bold capitalize text-foreground">{weatherData.severity}</p>
-                  <span className={`px-3 py-1 rounded-full text-xs font-bold capitalize ${
+                  <p className="font-bold capitalize text-sm text-foreground">{weatherData.severity}</p>
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-bold capitalize ${
                     weatherData.riskLevel === 'low' ? 'bg-green-100 text-green-700' :
                     weatherData.riskLevel === 'medium' ? 'bg-yellow-100 text-yellow-700' :
                     weatherData.riskLevel === 'high' ? 'bg-orange-100 text-orange-700' :
@@ -232,13 +233,13 @@ export default function WorkerDashboard() {
                 weatherData.riskLevel === 'low' ? 'default' :
                 weatherData.riskLevel === 'medium' ? 'secondary' :
                 'destructive'
-              } className="w-full justify-center text-xs font-bold py-2">
+              } className="w-full justify-center text-xs font-bold py-1">
                 {weatherData.riskLevel === 'low' ? '✅ Safe' : weatherData.riskLevel === 'medium' ? '⚠️ Caution' : '🚨 Alert'}
               </Badge>
             </div>
           ) : (
-            <div className="flex-1 flex items-center justify-center">
-              <Wind className="text-muted-foreground opacity-30" size={48} />
+            <div className="flex items-center justify-center">
+              <Wind className="text-muted-foreground opacity-30" size={40} />
             </div>
           )}
         </div>
