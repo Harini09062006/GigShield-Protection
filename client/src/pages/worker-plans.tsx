@@ -61,12 +61,12 @@ export default function WorkerPlans() {
               key={plan.id} 
               className={`relative glass-card rounded-3xl p-8 flex flex-col ${
                 isRecommended 
-                  ? 'border-2 border-primary shadow-xl shadow-primary/20 scale-105 z-10' 
-                  : 'hover:border-primary/50'
+                  ? 'border-2 border-[#6C5CE7] shadow-xl shadow-purple-600/20 scale-105 z-10' 
+                  : 'hover:border-[#6C5CE7]/50'
               } transition-all duration-300`}
             >
               {isRecommended && (
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-primary to-indigo-600 text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-md">
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-[#6C5CE7] to-[#8E7CFF] text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-md">
                   Most Popular
                 </div>
               )}
@@ -111,7 +111,7 @@ export default function WorkerPlans() {
                 disabled={createPlan.isPending}
                 className={`w-full px-6 py-4 rounded-xl font-bold transition-all ${
                   isRecommended 
-                    ? 'bg-primary text-white shadow-lg hover:shadow-xl hover:-translate-y-1' 
+                    ? 'bg-gradient-to-r from-[#6C5CE7] to-[#8E7CFF] text-white shadow-lg hover:shadow-xl hover:-translate-y-1' 
                     : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
                 }`}
               >

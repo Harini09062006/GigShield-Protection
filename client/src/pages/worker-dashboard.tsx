@@ -186,7 +186,7 @@ export default function WorkerDashboard() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 auto-rows-max">
         {/* Active Protection Card */}
-        <div className="w-full aspect-square rounded-[16px] p-6 bg-gradient-to-br from-primary to-indigo-600 text-white shadow-md hover:shadow-lg transition-shadow flex flex-col justify-between">
+        <div className="w-full aspect-square rounded-[16px] p-6 bg-gradient-to-br from-[#6C5CE7] to-[#8E7CFF] text-white shadow-md hover:shadow-lg transition-shadow flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold">Active Protection</h3>

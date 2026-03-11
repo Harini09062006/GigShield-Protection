@@ -80,7 +80,7 @@ export default function Login() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full px-6 py-3 bg-primary text-white rounded-xl font-semibold hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+            className="w-full px-6 py-3 bg-gradient-to-r from-[#6C5CE7] to-[#8E7CFF] text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-purple-600/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
           >
             {isLoading ? (
               <>

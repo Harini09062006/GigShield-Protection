@@ -127,7 +127,7 @@ export default function WorkerRegister() {
           <button 
             type="submit"
             disabled={createWorker.isPending}
-            className="mt-4 w-full px-6 py-4 rounded-xl font-bold bg-gradient-to-r from-primary to-indigo-600 text-white shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:transform-none transition-all flex justify-center items-center gap-2"
+            className="mt-4 w-full px-6 py-4 rounded-xl font-bold bg-gradient-to-r from-[#6C5CE7] to-[#8E7CFF] text-white shadow-lg shadow-purple-600/25 hover:shadow-xl hover:shadow-purple-600/30 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:transform-none transition-all flex justify-center items-center gap-2"
           >
             {createWorker.isPending ? <Loader2 className="animate-spin" size={20} /> : "Complete Registration"}
           </button>
