@@ -296,7 +296,7 @@ export default function AdminDashboard() {
           <form onSubmit={handleTrigger} className="space-y-4">
             <div className="space-y-2">
               <label className="text-sm font-semibold">Target City</label>
-              <select 
+              <select
                 value={formData.city}
                 onChange={(e) => setFormData({...formData, city: e.target.value})}
                 className="w-full px-4 py-3 rounded-xl bg-background border-2 border-border focus:outline-none focus:border-destructive focus:ring-4 focus:ring-destructive/10 transition-all"
@@ -315,9 +315,9 @@ export default function AdminDashboard() {
                 onChange={(e) => setFormData({...formData, type: e.target.value})}
                 className="w-full px-4 py-3 rounded-xl bg-background border-2 border-border focus:outline-none focus:border-destructive focus:ring-4 focus:ring-destructive/10 transition-all"
               >
-                <option value="rain">Heavy Rain / Flood</option>
-                <option value="pollution">Severe AQI (Smog)</option>
-                <option value="heatwave">Extreme Heatwave</option>
+                <option value="rain">Heavy Rain (>50mm)</option>
+                <option value="flood">Flood (High Water Level)</option>
+                <option value="pollution">Severe Air Pollution (AQI >200)</option>
               </select>
             </div>
 

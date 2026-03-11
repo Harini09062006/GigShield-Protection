@@ -85,9 +85,6 @@ export default function WorkerRegister() {
             >
               <option value="Swiggy">Swiggy</option>
               <option value="Zomato">Zomato</option>
-              <option value="Amazon">Amazon</option>
-              <option value="Zepto">Zepto</option>
-              <option value="Blinkit">Blinkit</option>
             </select>
           </div>
 

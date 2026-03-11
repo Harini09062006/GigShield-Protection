@@ -242,50 +242,45 @@ export async function registerRoutes(
     // Calculate AI predictions
     const aiPrediction = calculateAIRiskPrediction(weatherData.rainfall);
     
-    // Check for other disruption types (Simulated logic)
-    const isFlood = weatherData.rainfall > 70; // Heavy rain usually causes flood in this simulation
-    const isCurfew = Math.random() < 0.02; // 2% chance of curfew for demo
+    // Check for three specific disruption types
+    const isHeavyRain = weatherData.rainfall > 50; // Trigger: rainfall > 50mm
+    const isFlood = weatherData.rainfall > 70; // Trigger: high water level (simulated by heavy rain)
+    const isSevereAirPollution = aiPrediction.aqi > 200; // Trigger: AQI > 200
     
     const activeDisruptions = [];
     
-    if (weatherData.rainfall > 50) {
+    // Disruption 1: Heavy Rain
+    if (isHeavyRain) {
       activeDisruptions.push({
         type: "Heavy Rain",
-        detail: `${weatherData.rainfall}mm rainfall`,
+        detail: `${weatherData.rainfall}mm rainfall (Threshold: >50mm)`,
         impact: "High" as const,
         triggered: true
       });
     }
     
+    // Disruption 2: Flood
     if (isFlood) {
       activeDisruptions.push({
         type: "Flood",
-        detail: "Waterlogging detected in low-lying areas",
+        detail: "High water level detected in delivery areas",
         impact: "High" as const,
         triggered: true
       });
     }
     
-    if (aiPrediction.aqi > 200) {
+    // Disruption 3: Severe Air Pollution
+    if (isSevereAirPollution) {
       activeDisruptions.push({
-        type: "Severe Pollution",
-        detail: `AQI: ${aiPrediction.aqi}`,
-        impact: "High" as const,
-        triggered: true
-      });
-    }
-    
-    if (isCurfew) {
-      activeDisruptions.push({
-        type: "Curfew / Zone Closure",
-        detail: "Restricted movement in selected zones",
+        type: "Severe Air Pollution",
+        detail: `AQI: ${aiPrediction.aqi} (Threshold: >200)`,
         impact: "High" as const,
         triggered: true
       });
     }
 
-    // Auto-trigger claims for NEW disruption types
-    if (isFlood || aiPrediction.aqi > 200 || isCurfew) {
+    // Auto-trigger claims for the three disruption types
+    if (isHeavyRain || isFlood || isSevereAirPollution) {
       const workersList = await storage.getWorkers();
       const cityWorkers = workersList.filter(w => w.city.toLowerCase() === city.toLowerCase());
       
@@ -293,17 +288,21 @@ export async function registerRoutes(
         const wp = await storage.getWorkerPlan(w.id);
         if (wp && wp.workerPlan.status === 'active') {
           const existingClaims = await storage.getWorkerClaims(w.id);
-          const type = isFlood ? "Flood" : aiPrediction.aqi > 200 ? "Pollution" : "Curfew";
+          const disruptionType = isFlood ? "Flood" : isSevereAirPollution ? "Severe Air Pollution" : "Heavy Rain";
           const recentClaim = existingClaims.find(c => 
-            c.reason.toLowerCase().includes(type.toLowerCase()) && 
+            c.reason.toLowerCase().includes(disruptionType.toLowerCase()) && 
             c.createdAt && new Date(c.createdAt).getTime() > Date.now() - 3600000
           );
           
           if (!recentClaim) {
-            const fraudResult = validateClaimFraud(w, { ...weatherData, aqi: aiPrediction.aqi, isCurfew, isFlood }, `Parametric Trigger: ${type}`);
+            const fraudResult = validateClaimFraud(w, { ...weatherData, aqi: aiPrediction.aqi }, `Parametric Trigger: ${disruptionType}`);
             
             const hourlyRate = w.hourlyRate || 6000;
-            const hoursLost = isFlood ? 6 : isCurfew ? 8 : 4;
+            let hoursLost = 0;
+            if (isFlood) hoursLost = 6;
+            else if (isSevereAirPollution) hoursLost = 4;
+            else if (isHeavyRain) hoursLost = 3;
+            
             const incomeLoss = hoursLost * hourlyRate;
 
             await storage.createClaim({
@@ -312,7 +311,7 @@ export async function registerRoutes(
               amount: incomeLoss,
               hoursLost,
               hourlyRateAtClaim: hourlyRate,
-              reason: `Parametric Trigger: ${type} disruption`,
+              reason: `Parametric Trigger: ${disruptionType} in ${city}`,
               status: fraudResult.success ? "approved" : "rejected",
               fraudStatus: fraudResult.success ? "verified" : "suspicious",
               fraudDetails: JSON.stringify(fraudResult.details)
