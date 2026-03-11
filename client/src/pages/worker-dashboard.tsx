@@ -249,41 +249,6 @@ export default function WorkerDashboard() {
         </div>
       )}
 
-      {/* Earnings Protection Summary Card */}
-      {worker && planData && weatherData && (
-        <div className="mb-8 glass-card p-8 rounded-3xl border border-primary/20">
-          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-            <Wallet size={28} className="text-primary" />
-            Earnings Protection Summary
-          </h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Potential Income Loss */}
-            <div className="bg-gradient-to-br from-red-50 to-orange-50 p-6 rounded-xl border border-red-100">
-              <p className="text-sm text-muted-foreground font-semibold mb-2">Potential Income Loss</p>
-              <p className="text-3xl font-bold text-red-600 mb-2">₹{Math.round((worker.hourlyRate / 100) * 4)}</p>
-              <p className="text-xs text-muted-foreground">Based on 4 hours loss during disruption</p>
-            </div>
-
-            {/* Insurance Compensation */}
-            <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-xl border border-green-100">
-              <p className="text-sm text-muted-foreground font-semibold mb-2">Insurance Compensation</p>
-              <p className="text-3xl font-bold text-green-600 mb-2">₹{Math.round(planData.plan.coverageAmount / 100)}</p>
-              <p className="text-xs text-muted-foreground">Max payout per event</p>
-            </div>
-
-            {/* Income Protected Percentage */}
-            <div className="bg-gradient-to-br from-blue-50 to-cyan-50 p-6 rounded-xl border border-blue-100">
-              <p className="text-sm text-muted-foreground font-semibold mb-2">Income Protected</p>
-              <p className="text-3xl font-bold text-blue-600 mb-2">
-                {Math.round(((planData.plan.coverageAmount / 100) / ((worker.hourlyRate / 100) * 4)) * 100)}%
-              </p>
-              <p className="text-xs text-muted-foreground">Of potential income loss covered</p>
-            </div>
-          </div>
-        </div>
-      )}
-
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 auto-rows-max">
         {/* Active Protection Card */}
         <div className="w-full aspect-square rounded-[16px] p-6 bg-gradient-to-br from-primary to-indigo-600 text-white shadow-md hover:shadow-lg transition-shadow flex flex-col justify-between">
