@@ -8,7 +8,7 @@ import {
 import { Layout } from "@/components/layout";
 import { 
   ShieldCheck, AlertTriangle, CloudRain, Wind, 
-  Activity, CheckCircle2, Clock, Wallet, Info, Droplets, ArrowRight, Brain, TrendingUp, AlertCircle, MapPin, Shield
+  Activity, CheckCircle2, Clock, Wallet, Info, Droplets, ArrowRight, Brain, TrendingUp, AlertCircle, MapPin, Shield, Calendar
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -244,6 +244,63 @@ export default function WorkerDashboard() {
           )}
         </div>
       </div>
+
+      {/* Policy Status Section */}
+      {planData && planData.workerPlan && (
+        <Card className="mb-8 rounded-[16px] p-6 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 shadow-md">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2">
+              <Calendar className="text-blue-600" size={24} />
+              <h3 className="text-xl font-bold text-foreground">Policy Status</h3>
+            </div>
+            <span className="px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700">
+              {planData.workerPlan.status === 'active' ? '✓ Active' : 'Inactive'}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {/* Active Plan */}
+            <div className="bg-white rounded-[12px] p-4 border border-border/50">
+              <p className="text-xs font-bold text-muted-foreground uppercase mb-2 tracking-wider">Active Plan</p>
+              <p className="text-lg font-bold text-foreground">{planData.plan.name}</p>
+              <p className="text-xs text-muted-foreground mt-1">Premium: ₹{planData.plan.weeklyPremium / 100}/week</p>
+            </div>
+
+            {/* Policy Activation Date */}
+            <div className="bg-white rounded-[12px] p-4 border border-border/50">
+              <p className="text-xs font-bold text-muted-foreground uppercase mb-2 tracking-wider">Activation Date</p>
+              <p className="text-lg font-bold text-foreground">
+                {planData.workerPlan.startDate 
+                  ? new Date(planData.workerPlan.startDate).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })
+                  : 'N/A'}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {planData.workerPlan.startDate 
+                  ? new Date(planData.workerPlan.startDate).toLocaleDateString('en-IN', { year: 'numeric' })
+                  : ''}
+              </p>
+            </div>
+
+            {/* Coverage Period */}
+            <div className="bg-white rounded-[12px] p-4 border border-border/50">
+              <p className="text-xs font-bold text-muted-foreground uppercase mb-2 tracking-wider">Coverage Period</p>
+              <p className="text-lg font-bold text-foreground">7 Days</p>
+              <p className="text-xs text-muted-foreground mt-1">Weekly renewal cycle</p>
+            </div>
+
+            {/* Next Renewal Date */}
+            <div className="bg-white rounded-[12px] p-4 border border-border/50">
+              <p className="text-xs font-bold text-muted-foreground uppercase mb-2 tracking-wider">Next Renewal</p>
+              <p className="text-lg font-bold text-blue-600">
+                {planData.workerPlan.startDate 
+                  ? new Date(new Date(planData.workerPlan.startDate).getTime() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })
+                  : 'N/A'}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">Auto-renews weekly</p>
+            </div>
+          </div>
+        </Card>
+      )}
 
       {/* Disruption Alerts Section */}
       {weatherData?.activeDisruptions && weatherData.activeDisruptions.length > 0 && (
