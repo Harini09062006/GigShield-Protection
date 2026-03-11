@@ -142,6 +142,20 @@ export const api = {
         })
       }
     }
+  },
+  auth: {
+    login: {
+      method: 'POST' as const,
+      path: '/api/auth/login' as const,
+      input: z.object({ phone: z.string() }),
+      responses: {
+        200: z.object({
+          worker: z.custom<typeof workers.$inferSelect>(),
+          claims: z.array(z.custom<typeof claims.$inferSelect>())
+        }),
+        404: errorSchemas.notFound
+      }
+    }
   }
 };
 

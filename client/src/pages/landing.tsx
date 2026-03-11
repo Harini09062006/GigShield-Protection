@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Shield, Zap, CloudLightning, Activity, ArrowRight, UserPlus, Settings } from "lucide-react";
+import { Shield, Zap, CloudLightning, Activity, ArrowRight, UserPlus, Settings, LogIn } from "lucide-react";
 import { useEffect } from "react";
 import { Layout } from "@/components/layout";
 
@@ -32,13 +32,28 @@ export default function Landing() {
           When severe weather hits, claims are processed instantly—no paperwork required.
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-3xl animate-in fade-in slide-in-from-bottom-10 duration-700 delay-200">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-5xl animate-in fade-in slide-in-from-bottom-10 duration-700 delay-200">
+          <Link href="/login" className="group">
+            <div className="h-full glass-card p-8 rounded-3xl text-left hover:shadow-2xl hover:border-emerald-500/30 transition-all duration-300 hover:-translate-y-1 cursor-pointer">
+              <div className="w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center mb-6 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                <LogIn size={28} />
+              </div>
+              <h3 className="text-2xl font-bold mb-2">Login</h3>
+              <p className="text-muted-foreground mb-6">
+                Return to your account and view your coverage, claims history, and earnings protection.
+              </p>
+              <div className="flex items-center text-emerald-600 font-semibold group-hover:translate-x-2 transition-transform">
+                Sign In <ArrowRight size={18} className="ml-2" />
+              </div>
+            </div>
+          </Link>
+
           <Link href="/register" className="group">
             <div className="h-full glass-card p-8 rounded-3xl text-left hover:shadow-2xl hover:border-primary/30 transition-all duration-300 hover:-translate-y-1 cursor-pointer">
               <div className="w-14 h-14 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center mb-6 group-hover:bg-blue-600 group-hover:text-white transition-colors">
                 <UserPlus size={28} />
               </div>
-              <h3 className="text-2xl font-bold mb-2">I'm a Delivery Partner</h3>
+              <h3 className="text-2xl font-bold mb-2">I'm New Here</h3>
               <p className="text-muted-foreground mb-6">
                 Register to get covered and receive automatic payouts when severe weather strikes your city.
               </p>

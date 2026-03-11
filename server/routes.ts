@@ -170,6 +170,26 @@ export async function registerRoutes(
     res.json(stats);
   });
 
+  // Auth - Login by phone number
+  app.post(api.auth.login.path, async (req, res) => {
+    try {
+      const input = api.auth.login.input.parse(req.body);
+      const worker = await storage.getWorkerByPhone(input.phone);
+      
+      if (!worker) {
+        return res.status(404).json({ message: "Worker not found. Please register first." });
+      }
+      
+      const claims = await storage.getWorkerClaims(worker.id);
+      res.json({ worker, claims });
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      res.status(500).json({ message: "Internal Server Error" });
+    }
+  });
+
   // Weather endpoint - Simulate OpenWeather API check
   app.get(api.weather.getByCity.path, async (req, res) => {
     const city = req.params.city;

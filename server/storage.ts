@@ -10,6 +10,7 @@ export interface IStorage {
   // Workers
   getWorkers(): Promise<Worker[]>;
   getWorker(id: number): Promise<Worker | undefined>;
+  getWorkerByPhone(phone: string): Promise<Worker | undefined>;
   createWorker(worker: InsertWorker): Promise<Worker>;
   
   // Plans
@@ -42,6 +43,10 @@ export class DatabaseStorage implements IStorage {
   }
   async getWorker(id: number): Promise<Worker | undefined> {
     const [worker] = await db.select().from(workers).where(eq(workers.id, id));
+    return worker;
+  }
+  async getWorkerByPhone(phone: string): Promise<Worker | undefined> {
+    const [worker] = await db.select().from(workers).where(eq(workers.phone, phone));
     return worker;
   }
   async createWorker(worker: InsertWorker): Promise<Worker> {
