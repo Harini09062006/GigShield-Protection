@@ -3,7 +3,7 @@ import { useAdminStats, useTriggerDisruption, useWorkers, usePlans } from "@/hoo
 import { Layout } from "@/components/layout";
 import { 
   Users, AlertTriangle, FileText, IndianRupee, 
-  CloudLightning, Activity, ServerCrash, ShieldCheck, Map
+  CloudLightning, Activity, ServerCrash, ShieldCheck, Map, TrendingUp
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 
@@ -65,6 +65,43 @@ export default function AdminDashboard() {
       case 'medium': return 'bg-yellow-100 text-yellow-700';
       case 'high': return 'bg-red-100 text-red-700';
     }
+  };
+
+  // Weekly Risk Score data for each city
+  const weeklyRiskScores = [
+    {
+      city: "Mumbai",
+      riskScore: 72,
+      factors: [
+        { name: "Rainfall Risk", value: 65, color: "bg-blue-500" },
+        { name: "Flood Probability", value: 78, color: "bg-cyan-500" },
+        { name: "Pollution Level", value: 72, color: "bg-orange-500" }
+      ]
+    },
+    {
+      city: "Bengaluru",
+      riskScore: 48,
+      factors: [
+        { name: "Rainfall Risk", value: 45, color: "bg-blue-500" },
+        { name: "Flood Probability", value: 38, color: "bg-cyan-500" },
+        { name: "Pollution Level", value: 58, color: "bg-orange-500" }
+      ]
+    },
+    {
+      city: "Delhi",
+      riskScore: 85,
+      factors: [
+        { name: "Rainfall Risk", value: 72, color: "bg-blue-500" },
+        { name: "Flood Probability", value: 65, color: "bg-cyan-500" },
+        { name: "Pollution Level", value: 95, color: "bg-orange-500" }
+      ]
+    }
+  ];
+
+  const getRiskLevel = (score: number) => {
+    if (score < 40) return { label: "Low", color: "text-green-600" };
+    if (score < 70) return { label: "Moderate", color: "text-yellow-600" };
+    return { label: "High", color: "text-red-600" };
   };
 
   const handleTrigger = async (e: React.FormEvent) => {
@@ -130,6 +167,66 @@ export default function AdminDashboard() {
             <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Total Payouts</p>
           </div>
           <p className="text-4xl font-bold text-primary">₹{statsLoading ? "-" : ((stats?.totalPayouts || 0) / 100).toLocaleString()}</p>
+        </div>
+      </div>
+
+      {/* Weekly Risk Score */}
+      <div className="mb-8 glass-card p-8 rounded-3xl">
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold mb-2 flex items-center gap-2">
+            <TrendingUp size={28} className="text-primary" />
+            Weekly Delivery Risk Score
+          </h2>
+          <p className="text-sm text-muted-foreground">City-wide risk assessment based on weather, flood, and pollution factors</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {weeklyRiskScores.map((item, idx) => (
+            <div key={idx} className="bg-gradient-to-br from-background to-secondary/20 p-6 rounded-2xl border border-border">
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h3 className="text-lg font-bold text-foreground mb-1">{item.city}</h3>
+                  <p className={`text-sm font-semibold ${getRiskLevel(item.riskScore).color}`}>
+                    {getRiskLevel(item.riskScore).label} Risk
+                  </p>
+                </div>
+                <div className={`w-16 h-16 rounded-full flex items-center justify-center font-bold text-2xl ${
+                  item.riskScore < 40 ? 'bg-green-100 text-green-600' :
+                  item.riskScore < 70 ? 'bg-yellow-100 text-yellow-600' :
+                  'bg-red-100 text-red-600'
+                }`}>
+                  {item.riskScore}%
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                {item.factors.map((factor, fidx) => (
+                  <div key={fidx} className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-muted-foreground">{factor.name}</span>
+                      <span className="text-xs font-bold text-foreground">{factor.value}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className={`${factor.color} h-2 rounded-full transition-all`}
+                        style={{ width: `${factor.value}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-4 pt-4 border-t border-border">
+                <p className="text-xs text-muted-foreground">
+                  {item.riskScore >= 70 
+                    ? "🚨 High disruption probability - Monitor closely" 
+                    : item.riskScore >= 40
+                    ? "⚠️ Moderate conditions - Be prepared"
+                    : "✅ Safe conditions - Normal operations"}
+                </p>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
