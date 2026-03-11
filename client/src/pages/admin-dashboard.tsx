@@ -3,8 +3,9 @@ import { useAdminStats, useTriggerDisruption, useWorkers, usePlans } from "@/hoo
 import { Layout } from "@/components/layout";
 import { 
   Users, AlertTriangle, FileText, IndianRupee, 
-  CloudLightning, Activity, ServerCrash, ShieldCheck
+  CloudLightning, Activity, ServerCrash, ShieldCheck, Map
 } from "lucide-react";
+import { Card } from "@/components/ui/card";
 
 export default function AdminDashboard() {
   const { data: stats, isLoading: statsLoading } = useAdminStats();
@@ -15,6 +16,56 @@ export default function AdminDashboard() {
     type: "rain",
     severity: "severe"
   });
+
+  // Delivery Risk Map data for different cities
+  const deliveryRiskZones: Record<string, Array<{ name: string; riskType: string; riskLevel: 'low' | 'medium' | 'high' }>> = {
+    Mumbai: [
+      { name: "South Mumbai", riskType: "Flood Risk", riskLevel: "high" },
+      { name: "Andheri", riskType: "Pollution Risk", riskLevel: "high" },
+      { name: "Bandra", riskType: "Moderate Risk", riskLevel: "medium" },
+      { name: "Dadar", riskType: "Safe", riskLevel: "low" },
+      { name: "Thane", riskType: "Flood Risk", riskLevel: "high" },
+      { name: "Powai", riskType: "Safe", riskLevel: "low" }
+    ],
+    Bengaluru: [
+      { name: "Indiranagar", riskType: "Pollution Risk", riskLevel: "medium" },
+      { name: "Whitefield", riskType: "Safe", riskLevel: "low" },
+      { name: "Koramangala", riskType: "Safe", riskLevel: "low" },
+      { name: "Marathahalli", riskType: "Moderate Risk", riskLevel: "medium" }
+    ],
+    Delhi: [
+      { name: "South Delhi", riskType: "Pollution Risk", riskLevel: "high" },
+      { name: "Noida", riskType: "Safe", riskLevel: "low" },
+      { name: "Gurgaon", riskType: "Moderate Risk", riskLevel: "medium" },
+      { name: "East Delhi", riskType: "Flood Risk", riskLevel: "high" }
+    ]
+  };
+
+  const currentZones = deliveryRiskZones[formData.city] || deliveryRiskZones.Mumbai;
+
+  const getRiskColor = (level: 'low' | 'medium' | 'high') => {
+    switch(level) {
+      case 'low': return 'bg-green-50 border-green-200 border-l-4 border-l-green-600';
+      case 'medium': return 'bg-yellow-50 border-yellow-200 border-l-4 border-l-yellow-600';
+      case 'high': return 'bg-red-50 border-red-200 border-l-4 border-l-red-600';
+    }
+  };
+
+  const getRiskTextColor = (level: 'low' | 'medium' | 'high') => {
+    switch(level) {
+      case 'low': return 'text-green-700';
+      case 'medium': return 'text-yellow-700';
+      case 'high': return 'text-red-700';
+    }
+  };
+
+  const getRiskBgColor = (level: 'low' | 'medium' | 'high') => {
+    switch(level) {
+      case 'low': return 'bg-green-100 text-green-700';
+      case 'medium': return 'bg-yellow-100 text-yellow-700';
+      case 'high': return 'bg-red-100 text-red-700';
+    }
+  };
 
   const handleTrigger = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,6 +130,57 @@ export default function AdminDashboard() {
             <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Total Payouts</p>
           </div>
           <p className="text-4xl font-bold text-primary">₹{statsLoading ? "-" : ((stats?.totalPayouts || 0) / 100).toLocaleString()}</p>
+        </div>
+      </div>
+
+      {/* Delivery Risk Map */}
+      <div className="mb-8 glass-card p-8 rounded-3xl">
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold mb-2 flex items-center gap-2">
+            <Map size={28} className="text-primary" />
+            Delivery Risk Map
+          </h2>
+          <p className="text-sm text-muted-foreground">City zone risk assessment for {formData.city}</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {currentZones.map((zone, idx) => (
+            <div 
+              key={idx}
+              className={`p-4 rounded-2xl border ${getRiskColor(zone.riskLevel)} transition-all hover:shadow-md`}
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div>
+                  <h4 className="font-bold text-foreground text-lg">{zone.name}</h4>
+                  <p className={`text-sm font-medium ${getRiskTextColor(zone.riskLevel)}`}>{zone.riskType}</p>
+                </div>
+                <div className={`w-3 h-3 rounded-full ${
+                  zone.riskLevel === 'low' ? 'bg-green-600' :
+                  zone.riskLevel === 'medium' ? 'bg-yellow-600' :
+                  'bg-red-600'
+                }`}></div>
+              </div>
+              <span className={`text-xs font-bold px-3 py-1 rounded-full ${getRiskBgColor(zone.riskLevel)}`}>
+                {zone.riskLevel === 'low' ? 'SAFE' : zone.riskLevel === 'medium' ? 'MODERATE' : 'HIGH RISK'}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        {/* Risk Level Legend */}
+        <div className="mt-6 pt-6 border-t border-border flex flex-wrap gap-6">
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded-full bg-green-600"></div>
+            <span className="text-sm font-medium">Safe</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded-full bg-yellow-600"></div>
+            <span className="text-sm font-medium">Moderate Risk</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded-full bg-red-600"></div>
+            <span className="text-sm font-medium">High Risk</span>
+          </div>
         </div>
       </div>
 
