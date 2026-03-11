@@ -110,119 +110,100 @@ export default function WorkerDashboard() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
-        {/* Plan Status Card */}
-        <div className="lg:col-span-1 glass-card rounded-3xl p-6 md:p-8 bg-gradient-to-br from-primary to-indigo-600 text-white relative overflow-hidden shadow-xl shadow-primary/20">
-          <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
-            <ShieldCheck size={200} />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        {/* Active Protection Card */}
+        <div className="rounded-[16px] p-6 bg-gradient-to-br from-primary to-indigo-600 text-white shadow-md hover:shadow-lg transition-shadow flex flex-col h-80">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-bold">Active Protection</h3>
+            <ShieldCheck size={24} />
           </div>
-          
-          <div className="relative z-10">
-            <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-semibold mb-6">
-              <CheckCircle2 size={14} /> Active Protection
+
+          <div className="flex-1 flex flex-col justify-between">
+            <div>
+              <p className="text-sm text-blue-100 mb-3 font-medium">{planData.plan.name}</p>
+              <p className="text-sm text-blue-100 line-clamp-2 mb-6">{planData.plan.description}</p>
             </div>
-            
-            <h2 className="text-4xl font-bold mb-2">{planData.plan.name}</h2>
-            <p className="text-blue-100 mb-8 max-w-md">{planData.plan.description}</p>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-black/20 rounded-2xl p-4 backdrop-blur-sm">
-                <p className="text-blue-200 text-sm font-medium mb-1">Max Payout / Event</p>
-                <p className="text-3xl font-bold">₹{planData.plan.coverageAmount / 100}</p>
+
+            <div className="space-y-3">
+              <div className="bg-white/15 rounded-[12px] p-4 backdrop-blur-sm">
+                <p className="text-xs text-blue-100 font-medium mb-2">Max Payout / Event</p>
+                <p className="text-2xl font-bold">₹{planData.plan.coverageAmount / 100}</p>
               </div>
-              <div className="bg-black/20 rounded-2xl p-4 backdrop-blur-sm">
-                <p className="text-blue-200 text-sm font-medium mb-1">Premium</p>
-                <p className="text-3xl font-bold">₹{planData.plan.weeklyPremium / 100} <span className="text-sm font-normal text-blue-200">/ wk</span></p>
+              <div className="bg-white/15 rounded-[12px] p-4 backdrop-blur-sm">
+                <p className="text-xs text-blue-100 font-medium mb-2">Weekly Premium</p>
+                <p className="text-2xl font-bold">₹{planData.plan.weeklyPremium / 100}</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* AI Risk Prediction Card */}
-        <Card className="rounded-3xl p-6 md:p-8 flex flex-col relative overflow-hidden border-l-4 border-l-purple-500 bg-gradient-to-br from-purple-50 to-transparent">
-          <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-            <Brain size={20} className="text-purple-600" />
-            AI Risk Prediction
-          </h3>
-          
+        <div className="rounded-[16px] p-6 bg-gradient-to-br from-purple-50 to-blue-50 shadow-md hover:shadow-lg transition-shadow flex flex-col h-80 border border-purple-100">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-bold text-foreground">AI Risk Prediction</h3>
+            <Brain size={24} className="text-purple-600" />
+          </div>
+
           {weatherData ? (
-            <div className="space-y-3">
-              <div className="bg-white rounded-2xl p-4">
-                <p className="text-xs text-muted-foreground mb-1 font-medium">Predicted Rainfall</p>
-                <div className="flex items-end justify-between">
-                  <p className="font-bold text-foreground text-2xl">{weatherData.rainfall}mm</p>
-                  <TrendingUp className="text-purple-500" size={20} />
+            <div className="flex-1 flex flex-col justify-between space-y-3">
+              <div className="bg-white rounded-[12px] p-4">
+                <p className="text-xs text-muted-foreground font-medium mb-2">Rainfall</p>
+                <p className="text-2xl font-bold text-foreground">{weatherData.rainfall}mm</p>
+              </div>
+
+              <div className="bg-white rounded-[12px] p-4">
+                <p className="text-xs text-muted-foreground font-medium mb-2">AQI Level</p>
+                <div className="flex items-baseline gap-2">
+                  <p className="text-2xl font-bold text-foreground">{weatherData.aqi}</p>
+                  <p className="text-xs text-muted-foreground">{weatherData.aqiLevel}</p>
                 </div>
               </div>
 
-              <div className="bg-white rounded-2xl p-4">
-                <p className="text-xs text-muted-foreground mb-1 font-medium">AQI Level</p>
-                <div className="flex items-end justify-between">
-                  <div>
-                    <p className="font-bold text-foreground text-2xl">{weatherData.aqi}</p>
-                    <p className="text-xs text-muted-foreground">{weatherData.aqiLevel}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-2xl p-4">
-                <p className="text-xs text-muted-foreground mb-1 font-medium">Disruption Probability</p>
-                <div className="flex items-center justify-between mb-2">
-                  <p className="font-bold text-foreground text-2xl">{weatherData.disruptionProbability}%</p>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
+              <div className="bg-white rounded-[12px] p-4">
+                <p className="text-xs text-muted-foreground font-medium mb-2">Disruption Probability</p>
+                <p className="text-2xl font-bold text-foreground mb-2">{weatherData.disruptionProbability}%</p>
+                <div className="w-full bg-gray-200 rounded-full h-1.5">
                   <div 
-                    className={`h-2 rounded-full ${
+                    className={`h-1.5 rounded-full ${
                       weatherData.disruptionProbability >= 70 ? 'bg-red-500' :
                       weatherData.disruptionProbability >= 40 ? 'bg-yellow-500' :
                       'bg-green-500'
                     }`}
                     style={{ width: `${weatherData.disruptionProbability}%` }}
-                  />
+                  ></div>
                 </div>
-              </div>
-
-              <div className="flex justify-center pt-2">
-                <Badge variant={
-                  weatherData.aiRiskLevel === 'high' ? 'destructive' :
-                  weatherData.aiRiskLevel === 'medium' ? 'secondary' :
-                  'default'
-                } className="text-sm font-bold px-4 py-2 capitalize">
-                  Risk: {weatherData.aiRiskLevel}
-                </Badge>
               </div>
             </div>
           ) : (
-            <div className="text-center py-6">
-              <Brain className="text-muted-foreground mx-auto mb-2 opacity-50" size={32} />
-              <p className="text-sm text-muted-foreground">Analyzing weather data...</p>
+            <div className="flex-1 flex items-center justify-center">
+              <Brain className="text-muted-foreground opacity-30" size={48} />
             </div>
           )}
-        </Card>
+        </div>
 
-        {/* Live Weather & Risk Card */}
-        <Card className={`rounded-3xl p-6 md:p-8 flex flex-col relative overflow-hidden ${
+        {/* Weather Risk Level Card */}
+        <div className={`rounded-[16px] p-6 shadow-md hover:shadow-lg transition-shadow flex flex-col h-80 border ${
           weatherData?.riskLevel === 'extreme' || weatherData?.riskLevel === 'high' 
-            ? 'border-l-4 border-l-destructive bg-red-50/50' 
+            ? 'bg-red-50 border-red-200' 
             : weatherData?.riskLevel === 'medium'
-            ? 'border-l-4 border-l-yellow-500 bg-yellow-50/50'
-            : 'border-l-4 border-l-green-500 bg-green-50/50'
+            ? 'bg-yellow-50 border-yellow-200'
+            : 'bg-green-50 border-green-200'
         }`}>
-          <h3 className="text-lg font-bold mb-4 flex items-center gap-2 relative z-10">
-            <Droplets size={20} className={weatherData?.riskLevel === 'low' ? 'text-green-600' : weatherData?.riskLevel === 'medium' ? 'text-yellow-600' : 'text-red-600'} />
-            Weather Risk Level
-          </h3>
-          
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-bold text-foreground">Weather Risk Level</h3>
+            <Droplets size={24} className={weatherData?.riskLevel === 'low' ? 'text-green-600' : weatherData?.riskLevel === 'medium' ? 'text-yellow-600' : 'text-red-600'} />
+          </div>
+
           {weatherData ? (
-            <div className="space-y-4">
-              <div className="bg-white rounded-2xl p-4">
+            <div className="flex-1 flex flex-col justify-between space-y-3">
+              <div className="bg-white rounded-[12px] p-4">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm font-medium text-muted-foreground">Rainfall</span>
+                  <span className="text-xs font-medium text-muted-foreground">Rainfall</span>
                   <span className="font-bold text-foreground">{weatherData.rainfall}mm</span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="w-full bg-gray-200 rounded-full h-1.5">
                   <div 
-                    className={`h-2 rounded-full ${
+                    className={`h-1.5 rounded-full ${
                       weatherData.riskLevel === 'low' ? 'bg-green-500' : 
                       weatherData.riskLevel === 'medium' ? 'bg-yellow-500' : 
                       weatherData.riskLevel === 'high' ? 'bg-orange-500' : 'bg-red-600'
@@ -230,14 +211,10 @@ export default function WorkerDashboard() {
                     style={{ width: `${Math.min((weatherData.rainfall / 100) * 100, 100)}%` }}
                   />
                 </div>
-                <div className="flex justify-between text-xs text-muted-foreground mt-2">
-                  <span>Low</span>
-                  <span>Extreme</span>
-                </div>
               </div>
 
-              <div className="bg-white rounded-2xl p-4">
-                <p className="text-sm text-muted-foreground mb-1">Severity Level</p>
+              <div className="bg-white rounded-[12px] p-4">
+                <p className="text-xs text-muted-foreground font-medium mb-2">Severity</p>
                 <div className="flex items-center justify-between">
                   <p className="font-bold capitalize text-foreground">{weatherData.severity}</p>
                   <span className={`px-3 py-1 rounded-full text-xs font-bold capitalize ${
@@ -251,20 +228,20 @@ export default function WorkerDashboard() {
                 </div>
               </div>
 
-              {(weatherData.riskLevel === 'high' || weatherData.riskLevel === 'extreme') && (
-                <div className="bg-red-100 border border-red-300 rounded-xl p-3 text-center">
-                  <p className="text-xs font-bold text-red-700 mb-1">⚠️ Risk Alert Active</p>
-                  <p className="text-xs text-red-600">Rainfall exceeds safe threshold. Claims may auto-trigger if conditions persist.</p>
-                </div>
-              )}
+              <Badge variant={
+                weatherData.riskLevel === 'low' ? 'default' :
+                weatherData.riskLevel === 'medium' ? 'secondary' :
+                'destructive'
+              } className="w-full justify-center text-xs font-bold py-2">
+                {weatherData.riskLevel === 'low' ? '✅ Safe' : weatherData.riskLevel === 'medium' ? '⚠️ Caution' : '🚨 Alert'}
+              </Badge>
             </div>
           ) : (
-            <div className="text-center py-6">
-              <Wind className="text-muted-foreground mx-auto mb-2 opacity-50" size={32} />
-              <p className="text-sm text-muted-foreground">Loading weather data...</p>
+            <div className="flex-1 flex items-center justify-center">
+              <Wind className="text-muted-foreground opacity-30" size={48} />
             </div>
           )}
-        </Card>
+        </div>
       </div>
 
       {/* Disruption Alerts Section */}
