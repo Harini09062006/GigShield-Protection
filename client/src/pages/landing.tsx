@@ -18,13 +18,12 @@ export default function Landing() {
     <Layout>
       <div className="flex flex-col items-center justify-center text-center pt-12 pb-20">
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary font-semibold text-sm mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <Zap size={16} className="text-primary" />
-          <span>Instant AI-Powered Payouts</span>
+          <span>⚡ AI-Powered Instant Payouts</span>
         </div>
         
         <h1 className="text-5xl md:text-7xl font-bold max-w-4xl tracking-tight mb-6 animate-in fade-in slide-in-from-bottom-6 duration-700">
-          Weather the storm with <br className="hidden md:block"/>
-          <span className="text-gradient">Parametric Insurance</span>
+          <span className="text-gradient">Instant Weather Protection</span> <br className="hidden md:block"/>
+          for Delivery Workers
         </h1>
         
         <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mb-12 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100">
