@@ -172,44 +172,6 @@ export async function registerRoutes(
         triggered: true
       });
     }
-
-    // Auto-trigger claims for NEW disruption types
-    if (isFlood || aiPrediction.aqi > 200 || isCurfew) {
-      const workersList = await storage.getWorkers();
-      const cityWorkers = workersList.filter(w => w.city.toLowerCase() === city.toLowerCase());
-      
-      for (const w of cityWorkers) {
-        const wp = await storage.getWorkerPlan(w.id);
-        if (wp && wp.workerPlan.status === 'active') {
-          const existingClaims = await storage.getWorkerClaims(w.id);
-          const type = isFlood ? "Flood" : aiPrediction.aqi > 200 ? "Pollution" : "Curfew";
-          const recentClaim = existingClaims.find(c => 
-            c.reason.toLowerCase().includes(type.toLowerCase()) && 
-            c.createdAt && new Date(c.createdAt).getTime() > Date.now() - 3600000
-          );
-          
-          if (!recentClaim) {
-            const fraudResult = validateClaimFraud(w, { ...weatherData, aqi: aiPrediction.aqi, isCurfew, isFlood }, `Parametric Trigger: ${type}`);
-            
-            const hourlyRate = w.hourlyRate || 6000;
-            const hoursLost = isFlood ? 6 : isCurfew ? 8 : 4;
-            const incomeLoss = hoursLost * hourlyRate;
-
-            await storage.createClaim({
-              workerId: w.id,
-              planId: wp.plan.id,
-              amount: incomeLoss,
-              hoursLost,
-              hourlyRateAtClaim: hourlyRate,
-              reason: `Parametric Trigger: ${type} disruption`,
-              status: fraudResult.success ? "approved" : "rejected",
-              fraudStatus: fraudResult.success ? "verified" : "suspicious",
-              fraudDetails: JSON.stringify(fraudResult.details)
-            });
-          }
-        }
-      }
-    }
     
     res.json({
       city,

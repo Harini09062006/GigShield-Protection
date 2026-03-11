@@ -1,37 +1,27 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { useCreateWorker } from "@/hooks/use-gigshield";
+import { useCreateUser } from "@/hooks/use-gigshield";
 import { Layout } from "@/components/layout";
-import { MapPin, Smartphone, User, Briefcase, Loader2, Wallet } from "lucide-react";
+import { MapPin, Smartphone, User, Briefcase, Loader2 } from "lucide-react";
 
 export default function WorkerRegister() {
   const [, setLocation] = useLocation();
-  const createWorker = useCreateWorker();
+  const createUser = useCreateUser();
   
   const [formData, setFormData] = useState({
     name: "",
-    phone: "",
+    phoneNumber: "",
     platform: "Swiggy",
     city: "Mumbai",
-    hourlyRate: 6000,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // Add mock lat/lng based on city selection
-      let lat = 19.0760, lng = 72.8777; // Mumbai default
-      if (formData.city === "Bengaluru") { lat = 12.9716; lng = 77.5946; }
-      else if (formData.city === "Delhi") { lat = 12.9716; lng = 77.5946; }
-
-      const worker = await createWorker.mutateAsync({
-        ...formData,
-        lat: lat.toString(),
-        lng: lng.toString()
-      });
-      
-      localStorage.setItem("gigshield_worker_id", worker.id.toString());
-      setLocation("/plans");
+      const user = await createUser.mutateAsync(formData);
+      localStorage.setItem("gigshield_worker_id", user.id.toString());
+      localStorage.setItem("gigshield_worker_phone", formData.phoneNumber);
+      setLocation("/dashboard");
     } catch (error) {
       console.error(error);
     }
@@ -48,88 +38,79 @@ export default function WorkerRegister() {
         <form onSubmit={handleSubmit} className="glass-card p-8 rounded-3xl flex flex-col gap-6">
           <div className="space-y-2">
             <label className="text-sm font-semibold flex items-center gap-2">
-              <User size={16} className="text-primary"/> Full Name
+              <User size={16} className="text-primary" /> Full Name
             </label>
-            <input 
+            <input
               required
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({...formData, name: e.target.value})}
               className="w-full px-4 py-3 rounded-xl bg-background border-2 border-border focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all"
-              placeholder="Ravi Kumar"
+              placeholder="John Doe"
+              disabled={createUser.isPending}
             />
           </div>
 
           <div className="space-y-2">
             <label className="text-sm font-semibold flex items-center gap-2">
-              <Smartphone size={16} className="text-primary"/> Phone Number
+              <Smartphone size={16} className="text-primary" /> Phone Number
             </label>
-            <input 
+            <input
               required
               type="tel"
-              value={formData.phone}
-              onChange={(e) => setFormData({...formData, phone: e.target.value})}
+              value={formData.phoneNumber}
+              onChange={(e) => setFormData({...formData, phoneNumber: e.target.value})}
               className="w-full px-4 py-3 rounded-xl bg-background border-2 border-border focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all"
               placeholder="+91 98765 43210"
+              disabled={createUser.isPending}
             />
           </div>
 
           <div className="space-y-2">
             <label className="text-sm font-semibold flex items-center gap-2">
-              <Briefcase size={16} className="text-primary"/> Delivery Platform
+              <Briefcase size={16} className="text-primary" /> Platform
             </label>
-            <select 
+            <select
               value={formData.platform}
               onChange={(e) => setFormData({...formData, platform: e.target.value})}
-              className="w-full px-4 py-3 rounded-xl bg-background border-2 border-border focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all appearance-none"
+              className="w-full px-4 py-3 rounded-xl bg-background border-2 border-border focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all"
+              disabled={createUser.isPending}
             >
-              <option value="Swiggy">Swiggy</option>
-              <option value="Zomato">Zomato</option>
-              <option value="Amazon">Amazon</option>
-              <option value="Zepto">Zepto</option>
-              <option value="Blinkit">Blinkit</option>
+              <option>Swiggy</option>
+              <option>Zomato</option>
+              <option>Amazon</option>
             </select>
           </div>
 
           <div className="space-y-2">
             <label className="text-sm font-semibold flex items-center gap-2">
-              <MapPin size={16} className="text-primary"/> Primary City
+              <MapPin size={16} className="text-primary" /> City
             </label>
-            <select 
+            <select
               value={formData.city}
               onChange={(e) => setFormData({...formData, city: e.target.value})}
-              className="w-full px-4 py-3 rounded-xl bg-background border-2 border-border focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all appearance-none"
+              className="w-full px-4 py-3 rounded-xl bg-background border-2 border-border focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all"
+              disabled={createUser.isPending}
             >
-              <option value="Mumbai">Mumbai</option>
-              <option value="Bengaluru">Bengaluru</option>
-              <option value="Delhi">Delhi</option>
-              <option value="Chennai">Chennai</option>
+              <option>Mumbai</option>
+              <option>Bengaluru</option>
+              <option>Delhi</option>
             </select>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-semibold flex items-center gap-2">
-              <Wallet size={16} className="text-primary"/> Avg. Hourly Earnings (₹)
-            </label>
-            <input 
-              required
-              type="number"
-              value={formData.hourlyRate / 100}
-              onChange={(e) => setFormData({...formData, hourlyRate: parseInt(e.target.value) * 100 || 6000})}
-              className="w-full px-4 py-3 rounded-xl bg-background border-2 border-border focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all"
-              placeholder="60"
-            />
-            <p className="text-xs text-muted-foreground mt-1">
-              Used to calculate parametric payouts based on hours lost.
-            </p>
-          </div>
-
-          <button 
+          <button
             type="submit"
-            disabled={createWorker.isPending}
-            className="mt-4 w-full px-6 py-4 rounded-xl font-bold bg-gradient-to-r from-[#6C5CE7] to-[#8E7CFF] text-white shadow-lg shadow-purple-600/25 hover:shadow-xl hover:shadow-purple-600/30 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:transform-none transition-all flex justify-center items-center gap-2"
+            disabled={createUser.isPending}
+            className="w-full py-3 rounded-xl bg-gradient-to-r from-[#6C5CE7] to-[#8E7CFF] text-white font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
           >
-            {createWorker.isPending ? <Loader2 className="animate-spin" size={20} /> : "Complete Registration"}
+            {createUser.isPending ? (
+              <>
+                <Loader2 className="animate-spin" size={18} />
+                Creating account...
+              </>
+            ) : (
+              "Create Account"
+            )}
           </button>
         </form>
       </div>
