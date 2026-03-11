@@ -63,25 +63,9 @@ export async function registerRoutes(
     try {
       const input = api.claims.create.input.parse(req.body);
       
-      // Run Fraud Detection Logic
-      const worker = await storage.getWorker(input.workerId);
-      const weather = await mockWeatherData(worker?.city || "");
-      
-      const fraudResult = validateClaimFraud(worker, weather, input.reason);
-      
-      // Calculate income loss based on disruption
-      const hourlyRate = worker?.hourlyRate || 6000;
-      const hoursLost = Math.floor(Math.random() * 4) + 1; // Simulated 1-4 hours
-      const incomeLoss = hoursLost * hourlyRate;
-
       const claim = await storage.createClaim({
         ...input,
-        amount: incomeLoss,
-        hoursLost,
-        hourlyRateAtClaim: hourlyRate,
-        status: fraudResult.success ? "approved" : "rejected",
-        fraudStatus: fraudResult.success ? "verified" : "suspicious",
-        fraudDetails: JSON.stringify(fraudResult.details)
+        status: 'pending'
       });
       
       res.status(201).json(claim);
@@ -109,46 +93,6 @@ export async function registerRoutes(
     res.json(updatedClaim);
   });
 
-  // Disruptions and trigger endpoints removed - use weather API instead
-      
-      // Find all workers in that city and auto-generate claims if they have an active plan
-      const workersList = await storage.getWorkers();
-      const cityWorkers = workersList.filter(w => w.city.toLowerCase() === input.city.toLowerCase());
-      
-      for (const w of cityWorkers) {
-        const wp = await storage.getWorkerPlan(w.id);
-        if (wp && wp.workerPlan.status === 'active') {
-          // Verify Fraud for Auto-Trigger
-          const weather = await mockWeatherData(w.city);
-          const fraudResult = validateClaimFraud(w, weather, `Parametric Trigger: ${input.type}`);
-          
-          // Calculate income loss
-          const hourlyRate = w.hourlyRate || 6000;
-          const hoursLost = input.severity === 'severe' ? 4 : 2;
-          const incomeLoss = hoursLost * hourlyRate;
-
-          await storage.createClaim({
-            workerId: w.id,
-            planId: wp.plan.id,
-            amount: incomeLoss,
-            hoursLost,
-            hourlyRateAtClaim: hourlyRate,
-            reason: `Parametric Trigger: ${input.type} (${input.severity})`,
-            status: fraudResult.success ? "approved" : "rejected",
-            fraudStatus: fraudResult.success ? "verified" : "suspicious",
-            fraudDetails: JSON.stringify(fraudResult.details)
-          });
-        }
-      }
-      
-      res.status(201).json(disruption);
-    } catch (err) {
-      if (err instanceof z.ZodError) {
-        return res.status(400).json({ message: err.errors[0].message, field: err.errors[0].path.join('.') });
-      }
-      res.status(500).json({ message: "Internal Server Error" });
-    }
-  });
 
   app.get(api.admin.stats.path, async (req, res) => {
     const stats = await storage.getAdminStats();
@@ -182,47 +126,7 @@ export async function registerRoutes(
     // Simulate OpenWeather API call with mock data
     const weatherData = mockWeatherData(city);
     
-    // Check if rainfall exceeds threshold (> 50mm = high risk)
-    const RAINFALL_THRESHOLD = 50;
-    if (weatherData.rainfall > RAINFALL_THRESHOLD) {
-      // Auto-trigger claims for workers in this city with active plans
-      const workersList = await storage.getWorkers();
-      const cityWorkers = workersList.filter(w => w.city.toLowerCase() === city.toLowerCase());
-      
-      for (const w of cityWorkers) {
-        const wp = await storage.getWorkerPlan(w.id);
-        if (wp && wp.workerPlan.status === 'active') {
-          // Check if claim already exists for this event
-          const existingClaims = await storage.getWorkerClaims(w.id);
-          const recentClaim = existingClaims.find(c => 
-            c.reason.includes('rainfall') && 
-            c.createdAt && new Date(c.createdAt).getTime() > Date.now() - 3600000 // within 1 hour
-          );
-          
-          if (!recentClaim) {
-            // Verify Fraud for Auto-Trigger
-            const fraudResult = validateClaimFraud(w, weatherData, `Heavy rainfall auto-trigger`);
-            
-            // Calculate income loss
-            const hourlyRate = w.hourlyRate || 6000;
-            const hoursLost = weatherData.rainfall > 75 ? 5 : 3;
-            const incomeLoss = hoursLost * hourlyRate;
-
-            await storage.createClaim({
-              workerId: w.id,
-              planId: wp.plan.id,
-              amount: incomeLoss,
-              hoursLost,
-              hourlyRateAtClaim: hourlyRate,
-              reason: `Parametric Trigger: Heavy rainfall (${weatherData.rainfall}mm)`,
-              status: fraudResult.success ? "approved" : "rejected",
-              fraudStatus: fraudResult.success ? "verified" : "suspicious",
-              fraudDetails: JSON.stringify(fraudResult.details)
-            });
-          }
-        }
-      }
-    }
+    // Auto-trigger claims disabled in simplified schema
     
     // Calculate AI predictions
     const aiPrediction = calculateAIRiskPrediction(weatherData.rainfall);
