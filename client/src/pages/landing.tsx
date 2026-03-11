@@ -21,7 +21,7 @@ export default function Landing() {
           <span>⚡ AI-Powered Instant Payouts</span>
         </div>
         
-        <h1 className="text-3xl md:text-4xl font-bold max-w-4xl tracking-tight mb-6 animate-in fade-in slide-in-from-bottom-6 duration-700">
+        <h1 className="text-4xl md:text-5xl font-bold max-w-4xl tracking-tight mb-6 animate-in fade-in slide-in-from-bottom-6 duration-700">
           <span className="text-gradient">Instant Weather Protection</span> <br className="hidden md:block"/>
           for Delivery Workers
         </h1>
