@@ -617,165 +617,17 @@ export default function WorkerDashboard() {
         </div>
       )}
 
-      {/* Floating AI Chat Button */}
-      <button
-        onClick={() => setChatWindowOpen(!chatWindowOpen)}
-        className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-gradient-to-r from-primary to-indigo-600 text-white shadow-lg hover:shadow-xl transition-all flex items-center justify-center flex-col hover:scale-110"
-        data-testid="button-ai-chat"
-      >
-        <Brain size={24} />
-      </button>
-
-      {/* Floating Chat Window */}
-      {chatWindowOpen && (
-        <div className="fixed bottom-24 right-6 w-80 bg-white rounded-2xl shadow-2xl border border-purple-200 flex flex-col overflow-hidden z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
-          {/* Chat Header */}
-          <div className="bg-gradient-to-r from-primary to-indigo-600 text-white p-4 flex items-center justify-between">
-            <div>
-              <h3 className="font-bold text-sm">AI Support Assistant</h3>
-              <p className="text-xs text-purple-100">Ask about coverage & payouts</p>
-            </div>
-            <button
-              onClick={() => setChatWindowOpen(false)}
-              className="text-white hover:bg-white/20 p-1 rounded transition-colors"
-            >
-              ✕
-            </button>
-          </div>
-
-          {/* Chat Messages */}
-          <div className="h-64 overflow-y-auto p-4 space-y-3 bg-gray-50">
-            {chatMessages.length === 0 ? (
-              <div className="flex items-center justify-center h-full text-center">
-                <p className="text-xs text-muted-foreground">Start a conversation</p>
-              </div>
-            ) : (
-              chatMessages.map((msg) => (
-                <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-xs px-3 py-2 rounded-lg text-xs ${
-                    msg.sender === 'user' 
-                      ? 'bg-primary text-white' 
-                      : 'bg-purple-100 text-foreground'
-                  }`}>
-                    {msg.text}
-                  </div>
-                </div>
-              ))
-            )}
-            {chatLoading && (
-              <div className="flex justify-start">
-                <div className="bg-purple-100 text-foreground px-3 py-2 rounded-lg text-xs">
-                  <span className="inline-block animate-pulse">Thinking...</span>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Quick Questions */}
-          <div className="px-4 py-2 border-t border-gray-200 bg-white space-y-2">
-            <p className="text-[10px] font-semibold text-muted-foreground">Quick:</p>
-            <div className="space-y-1">
-              {[
-                "Will rain affect my earnings?",
-                "When will I get my payout?",
-                "What's my coverage?"
-              ].map((question, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => {
-                    setChatMessages(prev => [...prev, { id: Date.now() + '-' + idx, text: question, sender: 'user' }]);
-                    setChatLoading(true);
-                    setTimeout(() => {
-                      let aiResponse = "";
-                      if (question === "Will rain affect my earnings?") {
-                        const rainfall = weatherData?.rainfall || 0;
-                        aiResponse = `Rainfall in ${worker?.city}: ${rainfall}mm. Your ${planData?.plan.name} will auto-trigger if exceeding 50mm, protecting 3 hours of income.`;
-                      } else if (question === "When will I get my payout?") {
-                        const pendingClaims = claims?.filter(c => c.status === 'pending').length || 0;
-                        const approvedClaims = claims?.filter(c => c.status === 'approved').length || 0;
-                        aiResponse = `You have ${approvedClaims} approved claim(s). Payouts process within 24 hours of approval.`;
-                      } else {
-                        aiResponse = `Your ${planData?.plan.name} covers: Heavy Rain (exceeding 50mm), Floods (exceeding 70mm), and Severe Air Pollution (AQI exceeding 200). All auto-triggered with instant claims.`;
-                      }
-                      setChatMessages(prev => [...prev, { id: Date.now() + '-ai', text: aiResponse, sender: 'ai' }]);
-                      setChatLoading(false);
-                    }, 800);
-                  }}
-                  className="w-full text-left px-2 py-1 text-[10px] rounded bg-purple-50 hover:bg-purple-100 border border-purple-200 transition-colors font-medium text-foreground"
-                >
-                  {question}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Chat Input */}
-          <div className="p-3 border-t border-gray-200 flex gap-2">
-            <input
-              type="text"
-              value={chatInput}
-              onChange={(e) => setChatInput(e.target.value)}
-              onKeyPress={(e) => {
-                if (e.key === 'Enter' && chatInput.trim()) {
-                  const userMsg = chatInput.toLowerCase();
-                  setChatMessages(prev => [...prev, { id: Date.now().toString(), text: chatInput, sender: 'user' }]);
-                  setChatLoading(true);
-                  setTimeout(() => {
-                    let aiResponse = "";
-                    if (userMsg.includes('rain') || userMsg.includes('weather')) {
-                      const rainfall = weatherData?.rainfall || 0;
-                      aiResponse = `Rainfall in ${worker?.city}: ${rainfall}mm. Auto-trigger if exceeding 50mm.`;
-                    } else if (userMsg.includes('payout') || userMsg.includes('payment')) {
-                      const totalPaid = claims?.filter(c => c.status === 'paid').reduce((sum, c) => sum + c.amount, 0) || 0;
-                      aiResponse = `You've received ₹${totalPaid / 100}. Pending: ${claims?.filter(c => c.status === 'pending').length || 0}.`;
-                    } else if (userMsg.includes('cover')) {
-                      aiResponse = `Your plan covers 3 disruptions: Rain (exceeding 50mm), Floods (exceeding 70mm), Pollution (AQI exceeding 200).`;
-                    } else {
-                      aiResponse = `How can I help? Ask about your coverage, payouts, or weather risks.`;
-                    }
-                    setChatMessages(prev => [...prev, { id: (Date.now() + 1).toString(), text: aiResponse, sender: 'ai' }]);
-                    setChatLoading(false);
-                  }, 800);
-                  setChatInput("");
-                }
-              }}
-              placeholder="Ask..."
-              className="flex-1 px-2 py-1 text-xs rounded border border-purple-200 focus:outline-none focus:border-primary bg-white"
-              data-testid="input-chat-message"
-            />
-            <button
-              onClick={() => {
-                if (chatInput.trim()) {
-                  const userMsg = chatInput.toLowerCase();
-                  setChatMessages(prev => [...prev, { id: Date.now().toString(), text: chatInput, sender: 'user' }]);
-                  setChatLoading(true);
-                  setTimeout(() => {
-                    let aiResponse = "";
-                    if (userMsg.includes('rain') || userMsg.includes('weather')) {
-                      const rainfall = weatherData?.rainfall || 0;
-                      aiResponse = `Rainfall in ${worker?.city}: ${rainfall}mm. Auto-trigger if exceeding 50mm.`;
-                    } else if (userMsg.includes('payout') || userMsg.includes('payment')) {
-                      const totalPaid = claims?.filter(c => c.status === 'paid').reduce((sum, c) => sum + c.amount, 0) || 0;
-                      aiResponse = `You've received ₹${totalPaid / 100}. Pending: ${claims?.filter(c => c.status === 'pending').length || 0}.`;
-                    } else if (userMsg.includes('cover')) {
-                      aiResponse = `Your plan covers 3 disruptions: Rain (exceeding 50mm), Floods (exceeding 70mm), Pollution (AQI exceeding 200).`;
-                    } else {
-                      aiResponse = `How can I help? Ask about your coverage, payouts, or weather risks.`;
-                    }
-                    setChatMessages(prev => [...prev, { id: (Date.now() + 1).toString(), text: aiResponse, sender: 'ai' }]);
-                    setChatLoading(false);
-                  }, 800);
-                  setChatInput("");
-                }
-              }}
-              className="px-2 py-1 text-xs rounded bg-primary text-white font-bold hover:bg-primary/90 transition-colors"
-              data-testid="button-send-message"
-            >
-              Send
-            </button>
-          </div>
-        </div>
-      )}
+      {/* AI Support Button - Navigate to Support Page */}
+      <div className="fixed bottom-6 right-6 z-40">
+        <button
+          onClick={() => setLocation("/support")}
+          className="flex items-center gap-2 px-6 py-3 rounded-full bg-gradient-to-r from-primary to-indigo-600 text-white shadow-lg hover:shadow-xl transition-all hover:scale-105"
+          data-testid="button-ai-support"
+        >
+          <Brain size={20} />
+          <span className="font-bold text-sm">AI Support</span>
+        </button>
+      </div>
     </Layout>
   );
 }

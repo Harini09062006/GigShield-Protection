@@ -11,6 +11,7 @@ import WorkerRegister from "@/pages/worker-register";
 import WorkerPlans from "@/pages/worker-plans";
 import WorkerDashboard from "@/pages/worker-dashboard";
 import ClaimHistory from "@/pages/claim-history";
+import SupportPage from "@/pages/support";
 import AdminDashboard from "@/pages/admin-dashboard";
 
 function Router() {
@@ -22,6 +23,7 @@ function Router() {
       <Route path="/plans" component={WorkerPlans} />
       <Route path="/dashboard" component={WorkerDashboard} />
       <Route path="/claims" component={ClaimHistory} />
+      <Route path="/support" component={SupportPage} />
       <Route path="/admin" component={AdminDashboard} />
       <Route component={NotFound} />
     </Switch>
