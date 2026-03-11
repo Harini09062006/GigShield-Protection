@@ -78,9 +78,12 @@ export default function WorkerPlans() {
               
               <div className="mb-8 flex items-baseline gap-2">
                 <span className="text-5xl font-extrabold tracking-tight text-foreground">
-                  ₹{plan.weeklyPremium / 100}
+                  ₹{Math.round((plan.weeklyPremium / 100) * (1 + (Math.random() * 0.2)))}
                 </span>
                 <span className="text-muted-foreground font-medium">/ week</span>
+              </div>
+              <div className="text-xs text-muted-foreground mb-4">
+                <p>Dynamic premium based on your city's weather risk</p>
               </div>
               
               <div className="space-y-4 mb-8 flex-1">

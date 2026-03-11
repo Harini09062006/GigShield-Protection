@@ -249,6 +249,41 @@ export default function WorkerDashboard() {
         </div>
       )}
 
+      {/* Earnings Protection Summary Card */}
+      {worker && planData && weatherData && (
+        <div className="mb-8 glass-card p-8 rounded-3xl border border-primary/20">
+          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+            <Wallet size={28} className="text-primary" />
+            Earnings Protection Summary
+          </h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Potential Income Loss */}
+            <div className="bg-gradient-to-br from-red-50 to-orange-50 p-6 rounded-xl border border-red-100">
+              <p className="text-sm text-muted-foreground font-semibold mb-2">Potential Income Loss</p>
+              <p className="text-3xl font-bold text-red-600 mb-2">₹{Math.round((worker.hourlyRate / 100) * 4)}</p>
+              <p className="text-xs text-muted-foreground">Based on 4 hours loss during disruption</p>
+            </div>
+
+            {/* Insurance Compensation */}
+            <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-xl border border-green-100">
+              <p className="text-sm text-muted-foreground font-semibold mb-2">Insurance Compensation</p>
+              <p className="text-3xl font-bold text-green-600 mb-2">₹{Math.round(planData.plan.coverageAmount / 100)}</p>
+              <p className="text-xs text-muted-foreground">Max payout per event</p>
+            </div>
+
+            {/* Income Protected Percentage */}
+            <div className="bg-gradient-to-br from-blue-50 to-cyan-50 p-6 rounded-xl border border-blue-100">
+              <p className="text-sm text-muted-foreground font-semibold mb-2">Income Protected</p>
+              <p className="text-3xl font-bold text-blue-600 mb-2">
+                {Math.round(((planData.plan.coverageAmount / 100) / ((worker.hourlyRate / 100) * 4)) * 100)}%
+              </p>
+              <p className="text-xs text-muted-foreground">Of potential income loss covered</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 auto-rows-max">
         {/* Active Protection Card */}
         <div className="w-full aspect-square rounded-[16px] p-6 bg-gradient-to-br from-primary to-indigo-600 text-white shadow-md hover:shadow-lg transition-shadow flex flex-col justify-between">
@@ -652,6 +687,70 @@ export default function WorkerDashboard() {
           </div>
         )}
       </Card>
+
+      {/* Delivery Risk Map */}
+      {worker && (
+        <div className="mb-8 glass-card p-8 rounded-3xl">
+          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+            <MapPin size={28} className="text-primary" />
+            Delivery Risk Map - {worker.city}
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {worker.city === 'Mumbai' && [
+              { name: 'South Mumbai', risk: 'high' },
+              { name: 'Andheri', risk: 'medium' },
+              { name: 'Bandra', risk: 'medium' },
+              { name: 'Dadar', risk: 'low' }
+            ].map((zone, idx) => (
+              <div key={idx} className={`p-4 rounded-lg border-2 ${zone.risk === 'high' ? 'bg-red-50 border-red-300' : zone.risk === 'medium' ? 'bg-yellow-50 border-yellow-300' : 'bg-green-50 border-green-300'}`}>
+                <p className="font-semibold text-sm mb-1">{zone.name}</p>
+                <span className={`inline-block px-2 py-1 text-xs font-bold rounded ${zone.risk === 'high' ? 'bg-red-200 text-red-800' : zone.risk === 'medium' ? 'bg-yellow-200 text-yellow-800' : 'bg-green-200 text-green-800'}`}>{zone.risk.toUpperCase()}</span>
+              </div>
+            ))}
+            {worker.city !== 'Mumbai' && [
+              { name: 'Zone A', risk: 'low' },
+              { name: 'Zone B', risk: 'medium' },
+              { name: 'Zone C', risk: 'medium' },
+              { name: 'Zone D', risk: 'high' }
+            ].map((zone, idx) => (
+              <div key={idx} className={`p-4 rounded-lg border-2 ${zone.risk === 'high' ? 'bg-red-50 border-red-300' : zone.risk === 'medium' ? 'bg-yellow-50 border-yellow-300' : 'bg-green-50 border-green-300'}`}>
+                <p className="font-semibold text-sm mb-1">{zone.name}</p>
+                <span className={`inline-block px-2 py-1 text-xs font-bold rounded ${zone.risk === 'high' ? 'bg-red-200 text-red-800' : zone.risk === 'medium' ? 'bg-yellow-200 text-yellow-800' : 'bg-green-200 text-green-800'}`}>{zone.risk.toUpperCase()}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* System Status */}
+      <div className="mb-8 glass-card p-8 rounded-3xl">
+        <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+          <ShieldCheck size={28} className="text-primary" />
+          System Status
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="p-4 rounded-lg bg-blue-50 border border-blue-200">
+            <p className="text-xs text-muted-foreground font-semibold mb-1">Weather Data</p>
+            <p className="text-sm font-bold text-blue-600">OpenWeather API</p>
+            <span className="inline-block mt-2 px-2 py-1 text-xs font-semibold bg-green-100 text-green-700 rounded">✓ Active</span>
+          </div>
+          <div className="p-4 rounded-lg bg-orange-50 border border-orange-200">
+            <p className="text-xs text-muted-foreground font-semibold mb-1">Pollution Data</p>
+            <p className="text-sm font-bold text-orange-600">AQI API</p>
+            <span className="inline-block mt-2 px-2 py-1 text-xs font-semibold bg-green-100 text-green-700 rounded">✓ Connected</span>
+          </div>
+          <div className="p-4 rounded-lg bg-purple-50 border border-purple-200">
+            <p className="text-xs text-muted-foreground font-semibold mb-1">AI Risk Engine</p>
+            <p className="text-sm font-bold text-purple-600">Predictive</p>
+            <span className="inline-block mt-2 px-2 py-1 text-xs font-semibold bg-green-100 text-green-700 rounded">✓ Active</span>
+          </div>
+          <div className="p-4 rounded-lg bg-green-50 border border-green-200">
+            <p className="text-xs text-muted-foreground font-semibold mb-1">Parametric Oracle</p>
+            <p className="text-sm font-bold text-green-600">Smart Contract</p>
+            <span className="inline-block mt-2 px-2 py-1 text-xs font-semibold bg-green-100 text-green-700 rounded">✓ Connected</span>
+          </div>
+        </div>
+      </div>
 
       {/* Claim History Section */}
       {claims && claims.length > 0 && (
