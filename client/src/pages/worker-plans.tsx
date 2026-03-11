@@ -1,37 +1,27 @@
 import { useEffect } from "react";
 import { useLocation } from "wouter";
-import { useUserPolicy, useCreatePolicy, useUser } from "@/hooks/use-gigshield";
+import { usePlans, useCreateWorkerPlan, useWorkerPlan } from "@/hooks/use-gigshield";
 import { Layout } from "@/components/layout";
 import { Check, ShieldAlert, Loader2 } from "lucide-react";
-
-const STATIC_PLANS = [
-  { id: 1, name: "Basic Shield", weeklyPremium: 5000, maxPayout: 50000, coverage: "Basic weather protection" },
-  { id: 2, name: "Pro Shield", weeklyPremium: 9900, maxPayout: 120000, coverage: "Extended weather + flood protection" },
-  { id: 3, name: "Max Shield", weeklyPremium: 14900, maxPayout: 250000, coverage: "Full parametric + fraud detection" }
-];
 
 export default function WorkerPlans() {
   const [, setLocation] = useLocation();
   const workerId = Number(localStorage.getItem("gigshield_worker_id"));
   
-  const { data: user, isLoading: userLoading } = useUser(workerId);
-  const { data: currentPolicy } = useUserPolicy(workerId);
-  const createPolicy = useCreatePolicy();
+  const { data: plans, isLoading: plansLoading } = usePlans();
+  const { data: currentPlanData } = useWorkerPlan(workerId);
+  const createPlan = useCreateWorkerPlan();
 
   useEffect(() => {
     if (!workerId) setLocation("/");
-    if (currentPolicy) setLocation("/dashboard");
-  }, [workerId, currentPolicy, setLocation]);
+    if (currentPlanData?.workerPlan) setLocation("/dashboard");
+  }, [workerId, currentPlanData, setLocation]);
 
-  const handleSelectPlan = async (plan: typeof STATIC_PLANS[0]) => {
+  const handleSelectPlan = async (planId: number) => {
     try {
-      await createPolicy.mutateAsync({
-        userId: workerId,
-        planName: plan.name,
-        weeklyPremium: plan.weeklyPremium,
-        maxPayout: plan.maxPayout,
-        activationDate: new Date().toISOString(),
-        nextRenewalDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      await createPlan.mutateAsync({
+        workerId,
+        planId,
         status: "active"
       });
       setLocation("/dashboard");
@@ -40,7 +30,7 @@ export default function WorkerPlans() {
     }
   };
 
-  if (userLoading) {
+  if (plansLoading) {
     return (
       <Layout>
         <div className="flex items-center justify-center min-h-[60vh]">
@@ -57,46 +47,79 @@ export default function WorkerPlans() {
           <ShieldAlert size={32} />
         </div>
         <h1 className="text-4xl font-bold mb-4">Choose your protection</h1>
-        <p className="text-lg text-muted-foreground">Select a plan that fits your delivery needs. Coverage activates immediately.</p>
+        <p className="text-lg text-muted-foreground">
+          Select a weekly coverage plan. Premiums are deducted directly from your platform earnings.
+        </p>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
-        {STATIC_PLANS.map((plan) => (
-          <div key={plan.id} className="glass-card p-8 rounded-3xl flex flex-col gap-6 hover:shadow-xl transition-all">
-            <div>
-              <h2 className="text-2xl font-bold mb-2">{plan.name}</h2>
-              <p className="text-muted-foreground text-sm">{plan.coverage}</p>
-            </div>
-
-            <div className="flex items-baseline gap-1">
-              <span className="text-4xl font-bold">₹{(plan.weeklyPremium / 100).toFixed(0)}</span>
-              <span className="text-muted-foreground">/week</span>
-            </div>
-
-            <div className="flex items-center gap-3 bg-secondary/20 p-4 rounded-xl">
-              <span className="text-sm font-semibold">Max Coverage:</span>
-              <span className="text-lg font-bold text-primary">₹{(plan.maxPayout / 100).toFixed(0)}</span>
-            </div>
-
-            <button
-              onClick={() => handleSelectPlan(plan)}
-              disabled={createPolicy.isPending}
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-[#6C5CE7] to-[#8E7CFF] text-white font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        {plans?.map((plan, idx) => {
+          const isRecommended = idx === 1; // Middle plan is recommended
+          
+          return (
+            <div 
+              key={plan.id} 
+              className={`relative glass-card rounded-3xl p-8 flex flex-col ${
+                isRecommended 
+                  ? 'border-2 border-primary shadow-xl shadow-primary/20 scale-105 z-10' 
+                  : 'hover:border-primary/50'
+              } transition-all duration-300`}
             >
-              {createPolicy.isPending ? (
-                <>
-                  <Loader2 className="animate-spin" size={18} />
-                  Activating...
-                </>
-              ) : (
-                <>
-                  <Check size={18} />
-                  Select Plan
-                </>
+              {isRecommended && (
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-primary to-indigo-600 text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-md">
+                  Most Popular
+                </div>
               )}
-            </button>
-          </div>
-        ))}
+              
+              <div className="mb-8">
+                <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
+                <p className="text-muted-foreground min-h-[48px]">{plan.description}</p>
+              </div>
+              
+              <div className="mb-8 flex items-baseline gap-2">
+                <span className="text-5xl font-extrabold tracking-tight text-foreground">
+                  ₹{plan.weeklyPremium / 100}
+                </span>
+                <span className="text-muted-foreground font-medium">/ week</span>
+              </div>
+              
+              <div className="space-y-4 mb-8 flex-1">
+                <div className="flex items-start gap-3">
+                  <div className="bg-green-100 text-green-600 p-1 rounded-full mt-0.5">
+                    <Check size={14} strokeWidth={3} />
+                  </div>
+                  <span className="font-medium">
+                    Up to <strong className="text-lg">₹{plan.coverageAmount / 100}</strong> payout per event
+                  </span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="bg-green-100 text-green-600 p-1 rounded-full mt-0.5">
+                    <Check size={14} strokeWidth={3} />
+                  </div>
+                  <span className="text-muted-foreground">Covers Heavy Rain & Floods</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="bg-green-100 text-green-600 p-1 rounded-full mt-0.5">
+                    <Check size={14} strokeWidth={3} />
+                  </div>
+                  <span className="text-muted-foreground">Covers Severe AQI (Pollution)</span>
+                </div>
+              </div>
+
+              <button 
+                onClick={() => handleSelectPlan(plan.id)}
+                disabled={createPlan.isPending}
+                className={`w-full px-6 py-4 rounded-xl font-bold transition-all ${
+                  isRecommended 
+                    ? 'bg-primary text-white shadow-lg hover:shadow-xl hover:-translate-y-1' 
+                    : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                }`}
+              >
+                {createPlan.isPending ? "Processing..." : "Select Plan"}
+              </button>
+            </div>
+          );
+        })}
       </div>
     </Layout>
   );

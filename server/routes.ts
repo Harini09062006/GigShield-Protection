@@ -9,25 +9,27 @@ export async function registerRoutes(
   app: Express
 ): Promise<Server> {
   
+  // Setup database with some initial plans if they don't exist
+  setupPlans().catch(console.error);
 
-  app.get(api.users.list.path, async (req, res) => {
-    const usersList = await storage.getUsers();
-    res.json(usersList);
+  app.get(api.workers.list.path, async (req, res) => {
+    const workersList = await storage.getWorkers();
+    res.json(workersList);
   });
 
-  app.get(api.users.get.path, async (req, res) => {
-    const user = await storage.getUser(Number(req.params.id));
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
+  app.get(api.workers.get.path, async (req, res) => {
+    const worker = await storage.getWorker(Number(req.params.id));
+    if (!worker) {
+      return res.status(404).json({ message: "Worker not found" });
     }
-    res.json(user);
+    res.json(worker);
   });
 
-  app.post(api.users.create.path, async (req, res) => {
+  app.post(api.workers.create.path, async (req, res) => {
     try {
-      const input = api.users.create.input.parse(req.body);
-      const user = await storage.createUser(input);
-      res.status(201).json(user);
+      const input = api.workers.create.input.parse(req.body);
+      const worker = await storage.createWorker(input);
+      res.status(201).json(worker);
     } catch (err) {
       if (err instanceof z.ZodError) {
         return res.status(400).json({ message: err.errors[0].message, field: err.errors[0].path.join('.') });
@@ -36,16 +38,21 @@ export async function registerRoutes(
     }
   });
 
-  app.get(api.policies.get.path, async (req, res) => {
-    const policy = await storage.getUserPolicy(Number(req.params.userId));
-    res.json(policy || null);
+  app.get(api.plans.list.path, async (req, res) => {
+    const plansList = await storage.getPlans();
+    res.json(plansList);
   });
 
-  app.post(api.policies.create.path, async (req, res) => {
+  app.get(api.workerPlans.get.path, async (req, res) => {
+    const plan = await storage.getWorkerPlan(Number(req.params.workerId));
+    res.json(plan || null);
+  });
+
+  app.post(api.workerPlans.create.path, async (req, res) => {
     try {
-      const input = api.policies.create.input.parse(req.body);
-      const policy = await storage.createPolicy(input);
-      res.status(201).json(policy);
+      const input = api.workerPlans.create.input.parse(req.body);
+      const workerPlan = await storage.createWorkerPlan(input);
+      res.status(201).json(workerPlan);
     } catch (err) {
       if (err instanceof z.ZodError) {
         return res.status(400).json({ message: err.errors[0].message, field: err.errors[0].path.join('.') });
@@ -54,18 +61,34 @@ export async function registerRoutes(
     }
   });
 
-  app.get(api.claims.listByUser.path, async (req, res) => {
-    const userClaims = await storage.getUserClaims(Number(req.params.userId));
-    res.json(userClaims);
+  app.get(api.claims.listByWorker.path, async (req, res) => {
+    const workerClaims = await storage.getWorkerClaims(Number(req.params.workerId));
+    res.json(workerClaims);
   });
 
   app.post(api.claims.create.path, async (req, res) => {
     try {
       const input = api.claims.create.input.parse(req.body);
       
+      // Run Fraud Detection Logic
+      const worker = await storage.getWorker(input.workerId);
+      const weather = await mockWeatherData(worker?.city || "");
+      
+      const fraudResult = validateClaimFraud(worker, weather, input.reason);
+      
+      // Calculate income loss based on disruption
+      const hourlyRate = worker?.hourlyRate || 6000;
+      const hoursLost = Math.floor(Math.random() * 4) + 1; // Simulated 1-4 hours
+      const incomeLoss = hoursLost * hourlyRate;
+
       const claim = await storage.createClaim({
         ...input,
-        status: 'pending'
+        amount: incomeLoss,
+        hoursLost,
+        hourlyRateAtClaim: hourlyRate,
+        status: fraudResult.success ? "approved" : "rejected",
+        fraudStatus: fraudResult.success ? "verified" : "suspicious",
+        fraudDetails: JSON.stringify(fraudResult.details)
       });
       
       res.status(201).json(claim);
@@ -93,6 +116,54 @@ export async function registerRoutes(
     res.json(updatedClaim);
   });
 
+  app.get(api.disruptions.listByCity.path, async (req, res) => {
+    const ds = await storage.getDisruptions(req.params.city);
+    res.json(ds);
+  });
+
+  app.post(api.disruptions.trigger.path, async (req, res) => {
+    try {
+      const input = api.disruptions.trigger.input.parse(req.body);
+      const disruption = await storage.createDisruption(input);
+      
+      // Find all workers in that city and auto-generate claims if they have an active plan
+      const workersList = await storage.getWorkers();
+      const cityWorkers = workersList.filter(w => w.city.toLowerCase() === input.city.toLowerCase());
+      
+      for (const w of cityWorkers) {
+        const wp = await storage.getWorkerPlan(w.id);
+        if (wp && wp.workerPlan.status === 'active') {
+          // Verify Fraud for Auto-Trigger
+          const weather = await mockWeatherData(w.city);
+          const fraudResult = validateClaimFraud(w, weather, `Parametric Trigger: ${input.type}`);
+          
+          // Calculate income loss
+          const hourlyRate = w.hourlyRate || 6000;
+          const hoursLost = input.severity === 'severe' ? 4 : 2;
+          const incomeLoss = hoursLost * hourlyRate;
+
+          await storage.createClaim({
+            workerId: w.id,
+            planId: wp.plan.id,
+            amount: incomeLoss,
+            hoursLost,
+            hourlyRateAtClaim: hourlyRate,
+            reason: `Parametric Trigger: ${input.type} (${input.severity})`,
+            status: fraudResult.success ? "approved" : "rejected",
+            fraudStatus: fraudResult.success ? "verified" : "suspicious",
+            fraudDetails: JSON.stringify(fraudResult.details)
+          });
+        }
+      }
+      
+      res.status(201).json(disruption);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message, field: err.errors[0].path.join('.') });
+      }
+      res.status(500).json({ message: "Internal Server Error" });
+    }
+  });
 
   app.get(api.admin.stats.path, async (req, res) => {
     const stats = await storage.getAdminStats();
@@ -103,14 +174,14 @@ export async function registerRoutes(
   app.post(api.auth.login.path, async (req, res) => {
     try {
       const input = api.auth.login.input.parse(req.body);
-      const user = await storage.getUserByPhone(input.phone);
+      const worker = await storage.getWorkerByPhone(input.phone);
       
-      if (!user) {
-        return res.status(404).json({ message: "User not found. Please register first." });
+      if (!worker) {
+        return res.status(404).json({ message: "Worker not found. Please register first." });
       }
       
-      const userClaims = await storage.getUserClaims(user.id);
-      res.json({ worker: user, claims: userClaims });
+      const claims = await storage.getWorkerClaims(worker.id);
+      res.json({ worker, claims });
     } catch (err) {
       if (err instanceof z.ZodError) {
         return res.status(400).json({ message: err.errors[0].message });
@@ -126,7 +197,47 @@ export async function registerRoutes(
     // Simulate OpenWeather API call with mock data
     const weatherData = mockWeatherData(city);
     
-    // Auto-trigger claims disabled in simplified schema
+    // Check if rainfall exceeds threshold (> 50mm = high risk)
+    const RAINFALL_THRESHOLD = 50;
+    if (weatherData.rainfall > RAINFALL_THRESHOLD) {
+      // Auto-trigger claims for workers in this city with active plans
+      const workersList = await storage.getWorkers();
+      const cityWorkers = workersList.filter(w => w.city.toLowerCase() === city.toLowerCase());
+      
+      for (const w of cityWorkers) {
+        const wp = await storage.getWorkerPlan(w.id);
+        if (wp && wp.workerPlan.status === 'active') {
+          // Check if claim already exists for this event
+          const existingClaims = await storage.getWorkerClaims(w.id);
+          const recentClaim = existingClaims.find(c => 
+            c.reason.includes('rainfall') && 
+            c.createdAt && new Date(c.createdAt).getTime() > Date.now() - 3600000 // within 1 hour
+          );
+          
+          if (!recentClaim) {
+            // Verify Fraud for Auto-Trigger
+            const fraudResult = validateClaimFraud(w, weatherData, `Heavy rainfall auto-trigger`);
+            
+            // Calculate income loss
+            const hourlyRate = w.hourlyRate || 6000;
+            const hoursLost = weatherData.rainfall > 75 ? 5 : 3;
+            const incomeLoss = hoursLost * hourlyRate;
+
+            await storage.createClaim({
+              workerId: w.id,
+              planId: wp.plan.id,
+              amount: incomeLoss,
+              hoursLost,
+              hourlyRateAtClaim: hourlyRate,
+              reason: `Parametric Trigger: Heavy rainfall (${weatherData.rainfall}mm)`,
+              status: fraudResult.success ? "approved" : "rejected",
+              fraudStatus: fraudResult.success ? "verified" : "suspicious",
+              fraudDetails: JSON.stringify(fraudResult.details)
+            });
+          }
+        }
+      }
+    }
     
     // Calculate AI predictions
     const aiPrediction = calculateAIRiskPrediction(weatherData.rainfall);
@@ -171,6 +282,44 @@ export async function registerRoutes(
         impact: "High" as const,
         triggered: true
       });
+    }
+
+    // Auto-trigger claims for NEW disruption types
+    if (isFlood || aiPrediction.aqi > 200 || isCurfew) {
+      const workersList = await storage.getWorkers();
+      const cityWorkers = workersList.filter(w => w.city.toLowerCase() === city.toLowerCase());
+      
+      for (const w of cityWorkers) {
+        const wp = await storage.getWorkerPlan(w.id);
+        if (wp && wp.workerPlan.status === 'active') {
+          const existingClaims = await storage.getWorkerClaims(w.id);
+          const type = isFlood ? "Flood" : aiPrediction.aqi > 200 ? "Pollution" : "Curfew";
+          const recentClaim = existingClaims.find(c => 
+            c.reason.toLowerCase().includes(type.toLowerCase()) && 
+            c.createdAt && new Date(c.createdAt).getTime() > Date.now() - 3600000
+          );
+          
+          if (!recentClaim) {
+            const fraudResult = validateClaimFraud(w, { ...weatherData, aqi: aiPrediction.aqi, isCurfew, isFlood }, `Parametric Trigger: ${type}`);
+            
+            const hourlyRate = w.hourlyRate || 6000;
+            const hoursLost = isFlood ? 6 : isCurfew ? 8 : 4;
+            const incomeLoss = hoursLost * hourlyRate;
+
+            await storage.createClaim({
+              workerId: w.id,
+              planId: wp.plan.id,
+              amount: incomeLoss,
+              hoursLost,
+              hourlyRateAtClaim: hourlyRate,
+              reason: `Parametric Trigger: ${type} disruption`,
+              status: fraudResult.success ? "approved" : "rejected",
+              fraudStatus: fraudResult.success ? "verified" : "suspicious",
+              fraudDetails: JSON.stringify(fraudResult.details)
+            });
+          }
+        }
+      }
     }
     
     res.json({
@@ -285,3 +434,27 @@ function calculateAIRiskPrediction(rainfall: number) {
   };
 }
 
+// Helper to ensure we have plans in DB
+async function setupPlans() {
+  const existingPlans = await storage.getPlans();
+  if (existingPlans.length === 0) {
+    await storage.createPlan({
+      name: "Basic Shield",
+      weeklyPremium: 50, // 50 rupees
+      coverageAmount: 500, // 500 rupees per incident
+      description: "Basic cover for heavy rain and minor floods."
+    });
+    await storage.createPlan({
+      name: "Pro Shield",
+      weeklyPremium: 99, 
+      coverageAmount: 1200, 
+      description: "Extensive cover for all extreme weather disruptions."
+    });
+    await storage.createPlan({
+      name: "Max Shield",
+      weeklyPremium: 149, 
+      coverageAmount: 2500, 
+      description: "Premium parametric cover with fastest payouts."
+    });
+  }
+}
