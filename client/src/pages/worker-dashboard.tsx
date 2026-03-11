@@ -440,13 +440,24 @@ export default function WorkerDashboard() {
                   setChatMessages(prev => [...prev, { id: Date.now() + '-' + idx, text: question, sender: 'user' }]);
                   setChatLoading(true);
                   setTimeout(() => {
-                    const responses: Record<string, string> = {
-                      "Will rain affect my earnings today?": "Yes, heavy rain (exceeding 50mm) can trigger your parametric insurance. Our system monitors real-time weather and will automatically file a claim if conditions qualify, protecting your income for 3 hours of lost work.",
-                      "When will I receive my payout?": "Approved claims are typically processed within 24 hours. You'll see the status in your Claims History page. Once marked as 'paid', funds are transferred directly to your account.",
-                      "What does my insurance cover?": "Your plan covers income loss from three disruptions: Heavy Rain (exceeding 50mm, 3 hours), Floods (exceeding 70mm, 6 hours), and Severe Air Pollution (AQI exceeding 200, 4 hours). Claims are auto-filed when conditions trigger.",
-                      "How does parametric insurance work?": "Parametric insurance pays based on the occurrence of a defined event (heavy rain, flood, pollution) rather than actual loss proof. When triggers are met, claims auto-file instantly without waiting for verification."
-                    };
-                    setChatMessages(prev => [...prev, { id: Date.now() + '-ai', text: responses[question] || "I'm here to help! Please ask about coverage, payouts, or weather risks.", sender: 'ai' }]);
+                    let aiResponse = "";
+                    if (question === "Will rain affect my earnings today?") {
+                      const rainfall = weatherData?.rainfall || 0;
+                      const rainStatus = rainfall > 50 ? "severe" : rainfall > 30 ? "moderate" : "light";
+                      const willTrigger = rainfall > 50 ? "will automatically trigger" : "may trigger";
+                      aiResponse = `Current rainfall in ${worker?.city} is ${rainfall}mm (${rainStatus}). Heavy rain claims ${willTrigger} your ${planData?.plan.name} plan if it exceeds 50mm, protecting your income for 3 hours of lost work.`;
+                    } else if (question === "How much compensation will I get?") {
+                      const compensation = planData?.plan.coverageAmount ? (planData.plan.coverageAmount / 100) : "varies";
+                      aiResponse = `Your ${planData?.plan.name} plan provides up to ₹${compensation} compensation per disruption event. The actual payout is automatically calculated based on your hourly rate (₹${worker?.hourlyRate ? (worker.hourlyRate / 100) : 'N/A'}/hour) and hours lost during the disruption.`;
+                    } else if (question === "When will my payout arrive?") {
+                      const pendingClaims = claims?.filter(c => c.status === 'pending').length || 0;
+                      const approvedClaims = claims?.filter(c => c.status === 'approved').length || 0;
+                      const paidClaims = claims?.filter(c => c.status === 'paid').length || 0;
+                      aiResponse = `Your claims status: ${pendingClaims} pending, ${approvedClaims} approved, ${paidClaims} paid. Approved claims are processed within 24 hours. You have ${approvedClaims} claim(s) approved waiting for disbursement. Check your Claims History page for detailed status updates.`;
+                    } else if (question === "What does my plan cover?") {
+                      aiResponse = `Your ${planData?.plan.name} covers three disruption types: (1) Heavy Rain exceeding 50mm - 3 hours protected, (2) Floods exceeding 70mm - 6 hours protected, (3) Severe Air Pollution (AQI exceeding 200) - 4 hours protected. All claims are auto-filed instantly when conditions trigger, with no manual verification needed.`;
+                    }
+                    setChatMessages(prev => [...prev, { id: Date.now() + '-ai', text: aiResponse || "I'm here to help! Please ask about coverage, payouts, or weather risks.", sender: 'ai' }]);
                     setChatLoading(false);
                   }, 1000);
                   setChatInput("");
@@ -467,10 +478,33 @@ export default function WorkerDashboard() {
             onChange={(e) => setChatInput(e.target.value)}
             onKeyPress={(e) => {
               if (e.key === 'Enter' && chatInput.trim()) {
+                const userMsg = chatInput.toLowerCase();
                 setChatMessages(prev => [...prev, { id: Date.now().toString(), text: chatInput, sender: 'user' }]);
                 setChatLoading(true);
                 setTimeout(() => {
-                  setChatMessages(prev => [...prev, { id: (Date.now() + 1).toString(), text: "Thank you for your question! Our team is reviewing your inquiry. Check your Claims History for updates.", sender: 'ai' }]);
+                  let aiResponse = "";
+                  if (userMsg.includes('rain') || userMsg.includes('weather') || userMsg.includes('forecast')) {
+                    const rainfall = weatherData?.rainfall || 0;
+                    aiResponse = `Rainfall prediction for ${worker?.city}: ${rainfall}mm. Your ${planData?.plan.name} plan will auto-trigger a claim if rainfall exceeds 50mm. Current status: ${rainfall > 50 ? 'High risk - claim may trigger' : 'Moderate - monitoring'}.`;
+                  } else if (userMsg.includes('payout') || userMsg.includes('payment') || userMsg.includes('money')) {
+                    const totalPaid = claims?.filter(c => c.status === 'paid').reduce((sum, c) => sum + c.amount, 0) || 0;
+                    aiResponse = `You've received ₹${totalPaid / 100} in total payouts so far. Pending claims: ${claims?.filter(c => c.status === 'pending').length || 0}. Approved claims: ${claims?.filter(c => c.status === 'approved').length || 0}. Visit your Claims History for full details.`;
+                  } else if (userMsg.includes('cover') || userMsg.includes('insurance') || userMsg.includes('plan')) {
+                    aiResponse = `Your ${planData?.plan.name} plan provides comprehensive coverage for: Heavy Rain (exceeding 50mm), Floods (exceeding 70mm), and Severe Air Pollution (AQI exceeding 200). Premium: ₹${planData?.plan.weeklyPremium ? (planData.plan.weeklyPremium / 100) : 'N/A'}/week. Max coverage: ₹${planData?.plan.coverageAmount ? (planData.plan.coverageAmount / 100) : 'N/A'}.`;
+                  } else if (userMsg.includes('risk') || userMsg.includes('disruption') || userMsg.includes('alert')) {
+                    const disruptionCount = disruptions?.filter(d => d.active).length || 0;
+                    const riskLevel = weatherData?.riskLevel || 'unknown';
+                    aiResponse = `Current risk assessment for ${worker?.city}: ${riskLevel.toUpperCase()}. ${disruptionCount} active disruption(s) detected. Parametric insurance is monitoring real-time conditions and will auto-trigger claims when thresholds are exceeded. Stay safe!`;
+                  } else if (userMsg.includes('how') || userMsg.includes('work') || userMsg.includes('parametric')) {
+                    aiResponse = `Parametric insurance works by automatically triggering payouts when specific weather events occur, without waiting for damage proof. When rainfall exceeds 50mm, floods exceed 70mm, or AQI exceeds 200, we instantly file claims. No delays, no manual verification - instant protection for your earnings.`;
+                  } else if (userMsg.includes('claim') || userMsg.includes('status')) {
+                    const claimCount = claims?.length || 0;
+                    const pendingCount = claims?.filter(c => c.status === 'pending').length || 0;
+                    aiResponse = `You have ${claimCount} total claims filed. Status breakdown: Pending: ${pendingCount}, Approved: ${claims?.filter(c => c.status === 'approved').length || 0}, Paid: ${claims?.filter(c => c.status === 'paid').length || 0}. Visit your Claims History page to view detailed information for each claim.`;
+                  } else {
+                    aiResponse = `I can help with questions about your ${planData?.plan.name} plan, payouts, weather risks, or how parametric insurance works. What would you like to know?`;
+                  }
+                  setChatMessages(prev => [...prev, { id: (Date.now() + 1).toString(), text: aiResponse, sender: 'ai' }]);
                   setChatLoading(false);
                 }, 800);
                 setChatInput("");
@@ -482,10 +516,33 @@ export default function WorkerDashboard() {
           <button
             onClick={() => {
               if (chatInput.trim()) {
+                const userMsg = chatInput.toLowerCase();
                 setChatMessages(prev => [...prev, { id: Date.now().toString(), text: chatInput, sender: 'user' }]);
                 setChatLoading(true);
                 setTimeout(() => {
-                  setChatMessages(prev => [...prev, { id: (Date.now() + 1).toString(), text: "Thank you for your question! Our team is reviewing your inquiry. Check your Claims History for updates.", sender: 'ai' }]);
+                  let aiResponse = "";
+                  if (userMsg.includes('rain') || userMsg.includes('weather') || userMsg.includes('forecast')) {
+                    const rainfall = weatherData?.rainfall || 0;
+                    aiResponse = `Rainfall prediction for ${worker?.city}: ${rainfall}mm. Your ${planData?.plan.name} plan will auto-trigger a claim if rainfall exceeds 50mm. Current status: ${rainfall > 50 ? 'High risk - claim may trigger' : 'Moderate - monitoring'}.`;
+                  } else if (userMsg.includes('payout') || userMsg.includes('payment') || userMsg.includes('money')) {
+                    const totalPaid = claims?.filter(c => c.status === 'paid').reduce((sum, c) => sum + c.amount, 0) || 0;
+                    aiResponse = `You've received ₹${totalPaid / 100} in total payouts so far. Pending claims: ${claims?.filter(c => c.status === 'pending').length || 0}. Approved claims: ${claims?.filter(c => c.status === 'approved').length || 0}. Visit your Claims History for full details.`;
+                  } else if (userMsg.includes('cover') || userMsg.includes('insurance') || userMsg.includes('plan')) {
+                    aiResponse = `Your ${planData?.plan.name} plan provides comprehensive coverage for: Heavy Rain (exceeding 50mm), Floods (exceeding 70mm), and Severe Air Pollution (AQI exceeding 200). Premium: ₹${planData?.plan.weeklyPremium ? (planData.plan.weeklyPremium / 100) : 'N/A'}/week. Max coverage: ₹${planData?.plan.coverageAmount ? (planData.plan.coverageAmount / 100) : 'N/A'}.`;
+                  } else if (userMsg.includes('risk') || userMsg.includes('disruption') || userMsg.includes('alert')) {
+                    const disruptionCount = disruptions?.filter(d => d.active).length || 0;
+                    const riskLevel = weatherData?.riskLevel || 'unknown';
+                    aiResponse = `Current risk assessment for ${worker?.city}: ${riskLevel.toUpperCase()}. ${disruptionCount} active disruption(s) detected. Parametric insurance is monitoring real-time conditions and will auto-trigger claims when thresholds are exceeded. Stay safe!`;
+                  } else if (userMsg.includes('how') || userMsg.includes('work') || userMsg.includes('parametric')) {
+                    aiResponse = `Parametric insurance works by automatically triggering payouts when specific weather events occur, without waiting for damage proof. When rainfall exceeds 50mm, floods exceed 70mm, or AQI exceeds 200, we instantly file claims. No delays, no manual verification - instant protection for your earnings.`;
+                  } else if (userMsg.includes('claim') || userMsg.includes('status')) {
+                    const claimCount = claims?.length || 0;
+                    const pendingCount = claims?.filter(c => c.status === 'pending').length || 0;
+                    aiResponse = `You have ${claimCount} total claims filed. Status breakdown: Pending: ${pendingCount}, Approved: ${claims?.filter(c => c.status === 'approved').length || 0}, Paid: ${claims?.filter(c => c.status === 'paid').length || 0}. Visit your Claims History page to view detailed information for each claim.`;
+                  } else {
+                    aiResponse = `I can help with questions about your ${planData?.plan.name} plan, payouts, weather risks, or how parametric insurance works. What would you like to know?`;
+                  }
+                  setChatMessages(prev => [...prev, { id: (Date.now() + 1).toString(), text: aiResponse, sender: 'ai' }]);
                   setChatLoading(false);
                 }, 800);
                 setChatInput("");
