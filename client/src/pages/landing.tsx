@@ -33,7 +33,7 @@ export default function Landing() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-5xl animate-in fade-in slide-in-from-bottom-10 duration-700 delay-200">
           <Link href="/login" className="group">
-            <div className="h-full glass-card p-8 rounded-3xl text-left hover:shadow-2xl hover:border-emerald-500/30 transition-all duration-300 hover:-translate-y-1 cursor-pointer">
+            <div className="h-full glass-card p-8 rounded-3xl text-left hover:shadow-2xl hover:border-[#6C5CE7]/30 transition-all duration-300 hover:-translate-y-1 cursor-pointer">
               <div className="w-14 h-14 rounded-2xl bg-purple-100 text-[#6C5CE7] flex items-center justify-center mb-6 group-hover:bg-[#6C5CE7] group-hover:text-white transition-colors">
                 <LogIn size={28} />
               </div>
@@ -41,7 +41,7 @@ export default function Landing() {
               <p className="text-muted-foreground mb-6">
                 Return to your account and view your coverage, claims history, and earnings protection.
               </p>
-              <div className="flex items-center text-emerald-600 font-semibold group-hover:translate-x-2 transition-transform">
+              <div className="flex items-center text-[#6C5CE7] font-semibold group-hover:translate-x-2 transition-transform">
                 Sign In <ArrowRight size={18} className="ml-2" />
               </div>
             </div>
