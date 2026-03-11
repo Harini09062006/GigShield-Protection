@@ -31,7 +31,9 @@ export default function WorkerDashboard() {
 
   const [simulating, setSimulating] = useState(false);
   const [simulationStep, setSimulationStep] = useState("");
-  const [showAIExplanation, setShowAIExplanation] = useState(false);
+  const [chatMessages, setChatMessages] = useState<Array<{ id: string; text: string; sender: 'user' | 'ai' }>>([]);
+  const [chatInput, setChatInput] = useState("");
+  const [chatLoading, setChatLoading] = useState(false);
 
   useEffect(() => {
     if (!workerId) setLocation("/");
@@ -384,79 +386,117 @@ export default function WorkerDashboard() {
         </div>
       </div>
 
-      {/* AI Risk Model Explanation */}
-      <div className="mb-8">
-        <button
-          onClick={() => setShowAIExplanation(!showAIExplanation)}
-          className="w-full rounded-[16px] p-4 bg-gradient-to-r from-purple-100 to-blue-100 border border-purple-200 shadow-md hover:shadow-lg transition-all flex items-center justify-between group"
-        >
-          <div className="flex items-center gap-3 text-left">
-            <Brain className="text-purple-600" size={24} />
-            <div>
-              <h3 className="text-lg font-bold text-foreground">AI Risk Model Explanation</h3>
-              <p className="text-xs text-muted-foreground">Learn how we predict disruption risk</p>
-            </div>
+      {/* AI Support Chat Widget */}
+      <Card className="mb-8 rounded-[16px] p-6 bg-gradient-to-br from-purple-50 to-blue-50 border border-purple-200 shadow-md">
+        <div className="flex items-start gap-2 mb-4">
+          <Brain className="text-purple-600 mt-1" size={24} />
+          <div className="flex-1">
+            <h3 className="text-lg font-bold text-foreground">AI Support Assistant</h3>
+            <p className="text-xs text-muted-foreground">Ask anything about your coverage, payouts, or weather risks.</p>
           </div>
-          <ChevronDown 
-            size={24} 
-            className={`text-purple-600 transition-transform group-hover:translate-y-0.5 ${showAIExplanation ? 'rotate-180' : ''}`}
+        </div>
+
+        {/* Chat Messages Display */}
+        <div className="bg-white rounded-[12px] p-4 mb-4 h-64 overflow-y-auto border border-purple-100 flex flex-col gap-3">
+          {chatMessages.length === 0 ? (
+            <div className="flex items-center justify-center h-full text-center">
+              <p className="text-sm text-muted-foreground">Start a conversation with our AI assistant</p>
+            </div>
+          ) : (
+            chatMessages.map((msg) => (
+              <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                <div className={`max-w-xs px-3 py-2 rounded-lg text-sm ${
+                  msg.sender === 'user' 
+                    ? 'bg-primary text-white' 
+                    : 'bg-purple-100 text-foreground'
+                }`}>
+                  {msg.text}
+                </div>
+              </div>
+            ))
+          )}
+          {chatLoading && (
+            <div className="flex justify-start">
+              <div className="bg-purple-100 text-foreground px-3 py-2 rounded-lg text-sm">
+                <span className="inline-block animate-pulse">Thinking...</span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Quick Questions */}
+        <div className="mb-4 space-y-2">
+          <p className="text-xs font-semibold text-muted-foreground">Quick questions:</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            {[
+              "Will rain affect my earnings today?",
+              "When will I receive my payout?",
+              "What does my insurance cover?",
+              "How does parametric insurance work?"
+            ].map((question, idx) => (
+              <button
+                key={idx}
+                onClick={() => {
+                  setChatMessages(prev => [...prev, { id: Date.now() + '-' + idx, text: question, sender: 'user' }]);
+                  setChatLoading(true);
+                  setTimeout(() => {
+                    const responses: Record<string, string> = {
+                      "Will rain affect my earnings today?": "Yes, heavy rain (exceeding 50mm) can trigger your parametric insurance. Our system monitors real-time weather and will automatically file a claim if conditions qualify, protecting your income for 3 hours of lost work.",
+                      "When will I receive my payout?": "Approved claims are typically processed within 24 hours. You'll see the status in your Claims History page. Once marked as 'paid', funds are transferred directly to your account.",
+                      "What does my insurance cover?": "Your plan covers income loss from three disruptions: Heavy Rain (exceeding 50mm, 3 hours), Floods (exceeding 70mm, 6 hours), and Severe Air Pollution (AQI exceeding 200, 4 hours). Claims are auto-filed when conditions trigger.",
+                      "How does parametric insurance work?": "Parametric insurance pays based on the occurrence of a defined event (heavy rain, flood, pollution) rather than actual loss proof. When triggers are met, claims auto-file instantly without waiting for verification."
+                    };
+                    setChatMessages(prev => [...prev, { id: Date.now() + '-ai', text: responses[question] || "I'm here to help! Please ask about coverage, payouts, or weather risks.", sender: 'ai' }]);
+                    setChatLoading(false);
+                  }, 1000);
+                  setChatInput("");
+                }}
+                className="text-left px-3 py-2 text-xs rounded-lg bg-white border border-purple-200 hover:bg-purple-50 transition-colors font-medium text-foreground"
+              >
+                {question}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Chat Input */}
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={chatInput}
+            onChange={(e) => setChatInput(e.target.value)}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter' && chatInput.trim()) {
+                setChatMessages(prev => [...prev, { id: Date.now().toString(), text: chatInput, sender: 'user' }]);
+                setChatLoading(true);
+                setTimeout(() => {
+                  setChatMessages(prev => [...prev, { id: (Date.now() + 1).toString(), text: "Thank you for your question! Our team is reviewing your inquiry. Check your Claims History for updates.", sender: 'ai' }]);
+                  setChatLoading(false);
+                }, 800);
+                setChatInput("");
+              }
+            }}
+            placeholder="Type your question..."
+            className="flex-1 px-3 py-2 text-sm rounded-lg border border-purple-200 focus:outline-none focus:border-primary bg-white"
           />
-        </button>
-
-        {showAIExplanation && (
-          <div className="mt-2 rounded-[16px] p-6 bg-gradient-to-br from-purple-50 to-blue-50 border border-purple-200 shadow-md animate-in fade-in slide-in-from-top-2 duration-300">
-            <p className="text-sm text-foreground mb-6 font-medium">Our AI-powered prediction engine analyzes multiple real-time data sources to calculate delivery disruption risk:</p>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-              {/* Rainfall Forecast */}
-              <div className="bg-white rounded-[12px] p-4 border border-blue-200">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                  <h4 className="text-sm font-bold text-foreground">Rainfall Forecast</h4>
-                </div>
-                <p className="text-xs text-muted-foreground">Real-time rainfall predictions from meteorological APIs. Current: {weatherData?.rainfall || 'N/A'}mm</p>
-              </div>
-
-              {/* Flood Probability */}
-              <div className="bg-white rounded-[12px] p-4 border border-cyan-200">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-3 h-3 rounded-full bg-cyan-500"></div>
-                  <h4 className="text-sm font-bold text-foreground">Flood Probability</h4>
-                </div>
-                <p className="text-xs text-muted-foreground">Water level forecasts and seasonal flood risk patterns specific to your city region.</p>
-              </div>
-
-              {/* AQI Level */}
-              <div className="bg-white rounded-[12px] p-4 border border-orange-200">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-3 h-3 rounded-full bg-orange-500"></div>
-                  <h4 className="text-sm font-bold text-foreground">AQI Level</h4>
-                </div>
-                <p className="text-xs text-muted-foreground">Air Quality Index from pollution monitoring stations. Current: {weatherData?.aqi || 'N/A'} ({weatherData?.aqiLevel || 'N/A'})</p>
-              </div>
-
-              {/* Historical Patterns */}
-              <div className="bg-white rounded-[12px] p-4 border border-purple-200">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-3 h-3 rounded-full bg-purple-500"></div>
-                  <h4 className="text-sm font-bold text-foreground">Historical Patterns</h4>
-                </div>
-                <p className="text-xs text-muted-foreground">Machine learning models trained on 5+ years of disruption data to identify seasonal and regional trends.</p>
-              </div>
-            </div>
-
-            <div className="bg-blue-50 border border-blue-200 rounded-[12px] p-4">
-              <p className="text-xs font-bold text-blue-900 mb-2">How it Works:</p>
-              <ol className="text-xs text-blue-800 space-y-1 ml-4 list-decimal">
-                <li>Real-time data is collected from weather, pollution, and flood risk APIs</li>
-                <li>AI algorithms analyze 100+ data points to generate disruption probability</li>
-                <li>Risk score (0-100%) determines if automatic insurance claim should trigger</li>
-                <li>When threshold is exceeded, claims are auto-filed and funds disbursed instantly</li>
-              </ol>
-            </div>
-          </div>
-        )}
-      </div>
+          <button
+            onClick={() => {
+              if (chatInput.trim()) {
+                setChatMessages(prev => [...prev, { id: Date.now().toString(), text: chatInput, sender: 'user' }]);
+                setChatLoading(true);
+                setTimeout(() => {
+                  setChatMessages(prev => [...prev, { id: (Date.now() + 1).toString(), text: "Thank you for your question! Our team is reviewing your inquiry. Check your Claims History for updates.", sender: 'ai' }]);
+                  setChatLoading(false);
+                }, 800);
+                setChatInput("");
+              }
+            }}
+            className="px-4 py-2 text-sm rounded-lg bg-primary text-white font-bold hover:bg-primary/90 transition-colors"
+          >
+            Send
+          </button>
+        </div>
+      </Card>
 
       {/* Policy Status Section */}
       {planData && planData.workerPlan && (
