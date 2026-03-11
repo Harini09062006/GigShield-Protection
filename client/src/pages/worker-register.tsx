@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { useCreateWorker } from "@/hooks/use-gigshield";
 import { Layout } from "@/components/layout";
-import { MapPin, Smartphone, User, Briefcase, Loader2 } from "lucide-react";
+import { MapPin, Smartphone, User, Briefcase, Loader2, Wallet } from "lucide-react";
 
 export default function WorkerRegister() {
   const [, setLocation] = useLocation();
