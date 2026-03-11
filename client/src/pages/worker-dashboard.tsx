@@ -8,7 +8,7 @@ import {
 import { Layout } from "@/components/layout";
 import { 
   ShieldCheck, AlertTriangle, CloudRain, Wind, 
-  Activity, CheckCircle2, Clock, Wallet, Info, Droplets, ArrowRight, Brain, TrendingUp, AlertCircle, MapPin, Shield, Calendar, Bell, Zap
+  Activity, CheckCircle2, Clock, Wallet, Info, Droplets, ArrowRight, Brain, TrendingUp, AlertCircle, MapPin, Shield, Calendar, Bell, Zap, History
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -511,6 +511,77 @@ export default function WorkerDashboard() {
           </div>
         )}
       </Card>
+
+      {/* Claim History Section */}
+      {claims && claims.length > 0 && (
+        <Card className="rounded-[16px] p-6 bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200 shadow-md">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2">
+              <History className="text-slate-600" size={24} />
+              <h3 className="text-xl font-bold text-foreground">Claim History</h3>
+            </div>
+            <span className="text-xs font-bold text-muted-foreground bg-white px-3 py-1 rounded-full">
+              Last {Math.min(5, claims.length)} Claims
+            </span>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b-2 border-slate-300">
+                  <th className="text-left px-4 py-3 font-bold text-foreground">Event Type</th>
+                  <th className="text-left px-4 py-3 font-bold text-foreground">City</th>
+                  <th className="text-center px-4 py-3 font-bold text-foreground">Hours Lost</th>
+                  <th className="text-right px-4 py-3 font-bold text-foreground">Compensation</th>
+                  <th className="text-center px-4 py-3 font-bold text-foreground">Status</th>
+                  <th className="text-left px-4 py-3 font-bold text-foreground">Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {claims.slice(0, 5).map((claim, idx) => (
+                  <tr key={claim.id} className={`border-b border-slate-200 hover:bg-white/50 transition-colors ${idx % 2 === 0 ? 'bg-white/30' : 'bg-white/10'}`}>
+                    <td className="px-4 py-3 font-medium text-foreground">
+                      <span className="inline-block max-w-xs truncate">{claim.reason}</span>
+                    </td>
+                    <td className="px-4 py-3 text-foreground flex items-center gap-1">
+                      <MapPin size={14} className="text-slate-500" /> {worker?.city}
+                    </td>
+                    <td className="px-4 py-3 text-center font-bold text-blue-600">{claim.hoursLost || 0}h</td>
+                    <td className="px-4 py-3 text-right font-bold text-green-600">₹{claim.amount / 100}</td>
+                    <td className="px-4 py-3 text-center">
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold capitalize ${
+                        claim.status === 'paid' ? 'bg-green-100 text-green-700' :
+                        claim.status === 'approved' ? 'bg-blue-100 text-blue-700' :
+                        claim.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                        'bg-red-100 text-red-700'
+                      }`}>
+                        {claim.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground text-xs">
+                      {claim.createdAt ? new Date(claim.createdAt).toLocaleDateString('en-IN', { 
+                        year: '2-digit',
+                        month: 'short',
+                        day: 'numeric'
+                      }) : 'N/A'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {claims.length > 5 && (
+            <div className="mt-4 text-center">
+              <Link href="/claims">
+                <button className="text-sm font-bold text-primary hover:text-primary/80 flex items-center justify-center gap-1 mx-auto">
+                  View all {claims.length} claims <ArrowRight size={14} />
+                </button>
+              </Link>
+            </div>
+          )}
+        </Card>
+      )}
     </Layout>
   );
 }
