@@ -687,36 +687,6 @@ export default function WorkerDashboard() {
         </div>
       )}
 
-      {/* System Status */}
-      <div className="mb-8 glass-card p-8 rounded-3xl">
-        <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-          <ShieldCheck size={28} className="text-primary" />
-          System Status
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="p-4 rounded-lg bg-blue-50 border border-blue-200">
-            <p className="text-xs text-muted-foreground font-semibold mb-1">Weather Data</p>
-            <p className="text-sm font-bold text-blue-600">OpenWeather API</p>
-            <span className="inline-block mt-2 px-2 py-1 text-xs font-semibold bg-green-100 text-green-700 rounded">✓ Active</span>
-          </div>
-          <div className="p-4 rounded-lg bg-orange-50 border border-orange-200">
-            <p className="text-xs text-muted-foreground font-semibold mb-1">Pollution Data</p>
-            <p className="text-sm font-bold text-orange-600">AQI API</p>
-            <span className="inline-block mt-2 px-2 py-1 text-xs font-semibold bg-green-100 text-green-700 rounded">✓ Connected</span>
-          </div>
-          <div className="p-4 rounded-lg bg-purple-50 border border-purple-200">
-            <p className="text-xs text-muted-foreground font-semibold mb-1">AI Risk Engine</p>
-            <p className="text-sm font-bold text-purple-600">Predictive</p>
-            <span className="inline-block mt-2 px-2 py-1 text-xs font-semibold bg-green-100 text-green-700 rounded">✓ Active</span>
-          </div>
-          <div className="p-4 rounded-lg bg-green-50 border border-green-200">
-            <p className="text-xs text-muted-foreground font-semibold mb-1">Parametric Oracle</p>
-            <p className="text-sm font-bold text-green-600">Smart Contract</p>
-            <span className="inline-block mt-2 px-2 py-1 text-xs font-semibold bg-green-100 text-green-700 rounded">✓ Connected</span>
-          </div>
-        </div>
-      </div>
-
     </Layout>
   );
 }
