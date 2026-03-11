@@ -8,7 +8,7 @@ import {
 import { Layout } from "@/components/layout";
 import { 
   ShieldCheck, AlertTriangle, CloudRain, Wind, 
-  Activity, CheckCircle2, Clock, Wallet, Info, Droplets, ArrowRight, Brain, TrendingUp, AlertCircle, MapPin, Shield, Calendar
+  Activity, CheckCircle2, Clock, Wallet, Info, Droplets, ArrowRight, Brain, TrendingUp, AlertCircle, MapPin, Shield, Calendar, Bell, Zap
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -109,6 +109,78 @@ export default function WorkerDashboard() {
           {simulating ? simulationStep : "Simulate Severe Weather"}
         </button>
       </div>
+
+      {/* Real-Time Disruption Alert Panel */}
+      {weatherData?.activeDisruptions && weatherData.activeDisruptions.length > 0 && (
+        <div className="mb-8 animate-in fade-in slide-in-from-top-2 duration-500">
+          <div className="bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-[16px] p-6 shadow-lg border-l-4 border-l-red-700">
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-white/20 rounded-full">
+                  <Bell className="animate-pulse" size={24} />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold">🚨 Real-Time Disruption Alert</h2>
+                  <p className="text-red-100 text-sm">Active disruptions detected in your delivery area</p>
+                </div>
+              </div>
+              <Zap className="text-yellow-300 animate-bounce" size={28} />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {weatherData.activeDisruptions.map((alert, idx) => (
+                <div key={idx} className="bg-white/10 backdrop-blur-sm rounded-[12px] p-4 border border-white/20">
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <p className="text-xs font-bold text-red-100 uppercase tracking-wider mb-1">Alert Title</p>
+                      <p className="text-lg font-bold text-white">{alert.type}</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="bg-white/5 rounded-[8px] p-2">
+                      <p className="text-xs text-red-100 font-medium">Disruption Type</p>
+                      <p className="text-sm font-bold text-white">{alert.detail}</p>
+                    </div>
+
+                    <div className="bg-white/5 rounded-[8px] p-2">
+                      <p className="text-xs text-red-100 font-medium">Affected City</p>
+                      <p className="text-sm font-bold text-white flex items-center gap-1">
+                        <MapPin size={14} /> {worker?.city}
+                      </p>
+                    </div>
+
+                    <div className="bg-white/5 rounded-[8px] p-2">
+                      <p className="text-xs text-red-100 font-medium">Delivery Impact</p>
+                      <p className={`text-sm font-bold flex items-center gap-1 ${
+                        alert.impact === 'High' ? 'text-red-200' :
+                        alert.impact === 'Medium' ? 'text-yellow-200' :
+                        'text-green-200'
+                      }`}>
+                        <AlertCircle size={14} /> {alert.impact}
+                      </p>
+                    </div>
+                  </div>
+
+                  {alert.triggered && (
+                    <div className="mt-3 p-2 bg-green-500/20 border border-green-300/50 rounded-[8px]">
+                      <p className="text-xs font-bold text-green-200 flex items-center gap-1">
+                        <CheckCircle2 size={14} /> Insurance Claim Triggered
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-4 p-3 bg-white/10 rounded-[8px] border border-white/20">
+              <p className="text-xs text-red-100">
+                ⚠️ <span className="font-bold">Action Required:</span> Your insurance claim has been automatically triggered. Check your Claims section for details.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 auto-rows-max">
         {/* Active Protection Card */}
