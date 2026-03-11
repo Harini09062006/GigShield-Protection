@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation, Link } from "wouter";
 import confetti from "canvas-confetti";
+import { ChevronDown } from "lucide-react";
 import { 
   useWorker, useWorkerPlan, useWorkerClaims, 
   useCityDisruptions, useTriggerDisruption, useCreateClaim, useSimulatePayout, useWeather
@@ -30,6 +31,7 @@ export default function WorkerDashboard() {
 
   const [simulating, setSimulating] = useState(false);
   const [simulationStep, setSimulationStep] = useState("");
+  const [showAIExplanation, setShowAIExplanation] = useState(false);
 
   useEffect(() => {
     if (!workerId) setLocation("/");
@@ -315,6 +317,80 @@ export default function WorkerDashboard() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* AI Risk Model Explanation */}
+      <div className="mb-8">
+        <button
+          onClick={() => setShowAIExplanation(!showAIExplanation)}
+          className="w-full rounded-[16px] p-4 bg-gradient-to-r from-purple-100 to-blue-100 border border-purple-200 shadow-md hover:shadow-lg transition-all flex items-center justify-between group"
+        >
+          <div className="flex items-center gap-3 text-left">
+            <Brain className="text-purple-600" size={24} />
+            <div>
+              <h3 className="text-lg font-bold text-foreground">AI Risk Model Explanation</h3>
+              <p className="text-xs text-muted-foreground">Learn how we predict disruption risk</p>
+            </div>
+          </div>
+          <ChevronDown 
+            size={24} 
+            className={`text-purple-600 transition-transform group-hover:translate-y-0.5 ${showAIExplanation ? 'rotate-180' : ''}`}
+          />
+        </button>
+
+        {showAIExplanation && (
+          <div className="mt-2 rounded-[16px] p-6 bg-gradient-to-br from-purple-50 to-blue-50 border border-purple-200 shadow-md animate-in fade-in slide-in-from-top-2 duration-300">
+            <p className="text-sm text-foreground mb-6 font-medium">Our AI-powered prediction engine analyzes multiple real-time data sources to calculate delivery disruption risk:</p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              {/* Rainfall Forecast */}
+              <div className="bg-white rounded-[12px] p-4 border border-blue-200">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                  <h4 className="text-sm font-bold text-foreground">Rainfall Forecast</h4>
+                </div>
+                <p className="text-xs text-muted-foreground">Real-time rainfall predictions from meteorological APIs. Current: {weatherData?.rainfall || 'N/A'}mm</p>
+              </div>
+
+              {/* Flood Probability */}
+              <div className="bg-white rounded-[12px] p-4 border border-cyan-200">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-3 h-3 rounded-full bg-cyan-500"></div>
+                  <h4 className="text-sm font-bold text-foreground">Flood Probability</h4>
+                </div>
+                <p className="text-xs text-muted-foreground">Water level forecasts and seasonal flood risk patterns specific to your city region.</p>
+              </div>
+
+              {/* AQI Level */}
+              <div className="bg-white rounded-[12px] p-4 border border-orange-200">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-3 h-3 rounded-full bg-orange-500"></div>
+                  <h4 className="text-sm font-bold text-foreground">AQI Level</h4>
+                </div>
+                <p className="text-xs text-muted-foreground">Air Quality Index from pollution monitoring stations. Current: {weatherData?.aqi || 'N/A'} ({weatherData?.aqiLevel || 'N/A'})</p>
+              </div>
+
+              {/* Historical Patterns */}
+              <div className="bg-white rounded-[12px] p-4 border border-purple-200">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-3 h-3 rounded-full bg-purple-500"></div>
+                  <h4 className="text-sm font-bold text-foreground">Historical Patterns</h4>
+                </div>
+                <p className="text-xs text-muted-foreground">Machine learning models trained on 5+ years of disruption data to identify seasonal and regional trends.</p>
+              </div>
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-[12px] p-4">
+              <p className="text-xs font-bold text-blue-900 mb-2">How it Works:</p>
+              <ol className="text-xs text-blue-800 space-y-1 ml-4 list-decimal">
+                <li>Real-time data is collected from weather, pollution, and flood risk APIs</li>
+                <li>AI algorithms analyze 100+ data points to generate disruption probability</li>
+                <li>Risk score (0-100%) determines if automatic insurance claim should trigger</li>
+                <li>When threshold is exceeded, claims are auto-filed and funds disbursed instantly</li>
+              </ol>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Policy Status Section */}
