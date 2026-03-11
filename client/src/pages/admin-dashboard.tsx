@@ -315,9 +315,9 @@ export default function AdminDashboard() {
                 onChange={(e) => setFormData({...formData, type: e.target.value})}
                 className="w-full px-4 py-3 rounded-xl bg-background border-2 border-border focus:outline-none focus:border-destructive focus:ring-4 focus:ring-destructive/10 transition-all"
               >
-                <option value="rain">Heavy Rain (>50mm)</option>
+                <option value="rain">Heavy Rain (exceeds 50mm)</option>
                 <option value="flood">Flood (High Water Level)</option>
-                <option value="pollution">Severe Air Pollution (AQI >200)</option>
+                <option value="pollution">Severe Air Pollution (AQI exceeds 200)</option>
               </select>
             </div>
 
