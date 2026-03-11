@@ -1,100 +1,75 @@
 import { db } from "./db";
 import { 
-  workers, plans, workerPlans, claims, disruptions,
-  type Worker, type Plan, type WorkerPlan, type Claim, type Disruption,
-  type InsertWorker, type InsertPlan, type InsertWorkerPlan, type InsertClaim, type InsertDisruption
+  users, policies, claims,
+  type User, type Policy, type Claim,
+  type InsertUser, type InsertPolicy, type InsertClaim
 } from "@shared/schema";
 import { eq, desc, sql } from "drizzle-orm";
 
 export interface IStorage {
-  // Workers
-  getWorkers(): Promise<Worker[]>;
-  getWorker(id: number): Promise<Worker | undefined>;
-  getWorkerByPhone(phone: string): Promise<Worker | undefined>;
-  createWorker(worker: InsertWorker): Promise<Worker>;
+  // Users
+  getUsers(): Promise<User[]>;
+  getUser(id: number): Promise<User | undefined>;
+  getUserByPhone(phoneNumber: string): Promise<User | undefined>;
+  createUser(user: InsertUser): Promise<User>;
   
-  // Plans
-  getPlans(): Promise<Plan[]>;
-  getPlan(id: number): Promise<Plan | undefined>;
-  createPlan(plan: InsertPlan): Promise<Plan>;
-  
-  // Worker Plans
-  getWorkerPlan(workerId: number): Promise<{ workerPlan: WorkerPlan, plan: Plan } | undefined>;
-  createWorkerPlan(workerPlan: InsertWorkerPlan): Promise<WorkerPlan>;
+  // Policies
+  getUserPolicy(userId: number): Promise<Policy | undefined>;
+  createPolicy(policy: InsertPolicy): Promise<Policy>;
   
   // Claims
-  getWorkerClaims(workerId: number): Promise<Claim[]>;
+  getUserClaims(userId: number): Promise<Claim[]>;
   createClaim(claim: InsertClaim): Promise<Claim>;
   getClaim(id: number): Promise<Claim | undefined>;
   updateClaimStatus(id: number, status: string): Promise<Claim | undefined>;
   
-  // Disruptions
-  getDisruptions(city: string): Promise<Disruption[]>;
-  createDisruption(disruption: InsertDisruption): Promise<Disruption>;
-  
   // Admin
-  getAdminStats(): Promise<{ totalWorkers: number; totalDisruptions: number; totalClaims: number; totalPayouts: number }>;
+  getAdminStats(): Promise<{ totalUsers: number; totalClaims: number; totalPaidOut: number }>;
 }
 
 export class DatabaseStorage implements IStorage {
-  // Workers
-  async getWorkers(): Promise<Worker[]> {
-    return await db.select().from(workers).orderBy(desc(workers.createdAt));
+  // Users
+  async getUsers(): Promise<User[]> {
+    return await db.select().from(users).orderBy(desc(users.createdAt));
   }
-  async getWorker(id: number): Promise<Worker | undefined> {
-    const [worker] = await db.select().from(workers).where(eq(workers.id, id));
-    return worker;
+  async getUser(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
   }
-  async getWorkerByPhone(phone: string): Promise<Worker | undefined> {
-    const [worker] = await db.select().from(workers).where(eq(workers.phone, phone));
-    return worker;
+  async getUserByPhone(phoneNumber: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.phoneNumber, phoneNumber));
+    return user;
   }
-  async createWorker(worker: InsertWorker): Promise<Worker> {
-    const [newWorker] = await db.insert(workers).values(worker).returning();
-    return newWorker;
+  async createUser(user: InsertUser): Promise<User> {
+    const [newUser] = await db.insert(users).values(user).returning();
+    return newUser;
   }
   
-  // Plans
-  async getPlans(): Promise<Plan[]> {
-    return await db.select().from(plans);
-  }
-  async getPlan(id: number): Promise<Plan | undefined> {
-    const [plan] = await db.select().from(plans).where(eq(plans.id, id));
-    return plan;
-  }
-  async createPlan(plan: InsertPlan): Promise<Plan> {
-    const [newPlan] = await db.insert(plans).values(plan).returning();
-    return newPlan;
-  }
-
-  // Worker Plans
-  async getWorkerPlan(workerId: number): Promise<{ workerPlan: WorkerPlan, plan: Plan } | undefined> {
-    const [result] = await db
+  // Policies
+  async getUserPolicy(userId: number): Promise<Policy | undefined> {
+    const [policy] = await db
       .select()
-      .from(workerPlans)
-      .innerJoin(plans, eq(workerPlans.planId, plans.id))
-      .where(eq(workerPlans.workerId, workerId))
-      .orderBy(desc(workerPlans.startDate))
+      .from(policies)
+      .where(eq(policies.userId, userId))
+      .orderBy(desc(policies.activationDate))
       .limit(1);
-    
-    if (!result) return undefined;
-    return { workerPlan: result.worker_plans, plan: result.plans };
+    return policy;
   }
-  async createWorkerPlan(workerPlan: InsertWorkerPlan): Promise<WorkerPlan> {
-    // End active plans for this worker if any
-    await db.update(workerPlans)
+  async createPolicy(policy: InsertPolicy): Promise<Policy> {
+    // Mark any existing active policies as expired
+    await db.update(policies)
       .set({ status: 'expired' })
-      .where(eq(workerPlans.workerId, workerPlan.workerId));
+      .where(eq(policies.userId, policy.userId));
       
-    const [newWorkerPlan] = await db.insert(workerPlans).values(workerPlan).returning();
-    return newWorkerPlan;
+    const [newPolicy] = await db.insert(policies).values(policy).returning();
+    return newPolicy;
   }
 
   // Claims
-  async getWorkerClaims(workerId: number): Promise<Claim[]> {
-    return await db.select().from(claims).where(eq(claims.workerId, workerId)).orderBy(desc(claims.createdAt));
+  async getUserClaims(userId: number): Promise<Claim[]> {
+    return await db.select().from(claims).where(eq(claims.userId, userId)).orderBy(desc(claims.createdAt));
   }
-  async createClaim(claim: InsertClaim & { fraudStatus?: string, fraudDetails?: string }): Promise<Claim> {
+  async createClaim(claim: InsertClaim): Promise<Claim> {
     const [newClaim] = await db.insert(claims).values(claim).returning();
     return newClaim;
   }
@@ -107,27 +82,16 @@ export class DatabaseStorage implements IStorage {
     return claim;
   }
 
-  // Disruptions
-  async getDisruptions(city: string): Promise<Disruption[]> {
-    return await db.select().from(disruptions).where(eq(disruptions.city, city)).orderBy(desc(disruptions.createdAt));
-  }
-  async createDisruption(disruption: InsertDisruption): Promise<Disruption> {
-    const [newDisruption] = await db.insert(disruptions).values(disruption).returning();
-    return newDisruption;
-  }
-
   // Admin
-  async getAdminStats(): Promise<{ totalWorkers: number; totalDisruptions: number; totalClaims: number; totalPayouts: number }> {
-    const workersResult = await db.select({ count: sql<number>`count(*)` }).from(workers);
-    const disruptionsResult = await db.select({ count: sql<number>`count(*)` }).from(disruptions);
+  async getAdminStats(): Promise<{ totalUsers: number; totalClaims: number; totalPaidOut: number }> {
+    const usersResult = await db.select({ count: sql<number>`count(*)` }).from(users);
     const claimsResult = await db.select({ count: sql<number>`count(*)` }).from(claims);
-    const payoutsResult = await db.select({ total: sql<number>`sum(${claims.amount})` }).from(claims).where(eq(claims.status, 'paid'));
+    const paidOutResult = await db.select({ total: sql<number>`sum(${claims.compensationAmount})` }).from(claims).where(eq(claims.status, 'paid'));
 
     return {
-      totalWorkers: Number(workersResult[0]?.count || 0),
-      totalDisruptions: Number(disruptionsResult[0]?.count || 0),
+      totalUsers: Number(usersResult[0]?.count || 0),
       totalClaims: Number(claimsResult[0]?.count || 0),
-      totalPayouts: Number(payoutsResult[0]?.total || 0),
+      totalPaidOut: Number(paidOutResult[0]?.total || 0),
     };
   }
 }

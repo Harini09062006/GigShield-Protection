@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { 
-  insertWorkerSchema, insertPlanSchema, insertWorkerPlanSchema, 
-  insertClaimSchema, insertDisruptionSchema, 
-  workers, plans, workerPlans, claims, disruptions 
+  insertUserSchema, insertPolicySchema, 
+  insertClaimSchema, 
+  users, policies, claims 
 } from './schema';
 
 export const errorSchemas = {
@@ -12,62 +12,52 @@ export const errorSchemas = {
 };
 
 export const api = {
-  workers: {
+  users: {
     list: {
       method: 'GET' as const,
-      path: '/api/workers' as const,
-      responses: { 200: z.array(z.custom<typeof workers.$inferSelect>()) },
+      path: '/api/users' as const,
+      responses: { 200: z.array(z.custom<typeof users.$inferSelect>()) },
     },
     get: {
       method: 'GET' as const,
-      path: '/api/workers/:id' as const,
+      path: '/api/users/:id' as const,
       responses: { 
-        200: z.custom<typeof workers.$inferSelect>(),
+        200: z.custom<typeof users.$inferSelect>(),
         404: errorSchemas.notFound 
       },
     },
     create: {
       method: 'POST' as const,
-      path: '/api/workers' as const,
-      input: insertWorkerSchema,
+      path: '/api/users' as const,
+      input: insertUserSchema,
       responses: {
-        201: z.custom<typeof workers.$inferSelect>(),
+        201: z.custom<typeof users.$inferSelect>(),
         400: errorSchemas.validation
       },
     },
   },
-  plans: {
-    list: {
-      method: 'GET' as const,
-      path: '/api/plans' as const,
-      responses: { 200: z.array(z.custom<typeof plans.$inferSelect>()) },
-    },
-  },
-  workerPlans: {
+  policies: {
     get: {
       method: 'GET' as const,
-      path: '/api/workers/:workerId/plan' as const,
+      path: '/api/users/:userId/policy' as const,
       responses: {
-        200: z.object({
-          workerPlan: z.custom<typeof workerPlans.$inferSelect>(),
-          plan: z.custom<typeof plans.$inferSelect>()
-        }).nullable(),
+        200: z.custom<typeof policies.$inferSelect>().nullable(),
       },
     },
     create: {
       method: 'POST' as const,
-      path: '/api/worker-plans' as const,
-      input: insertWorkerPlanSchema,
+      path: '/api/policies' as const,
+      input: insertPolicySchema,
       responses: {
-        201: z.custom<typeof workerPlans.$inferSelect>(),
+        201: z.custom<typeof policies.$inferSelect>(),
         400: errorSchemas.validation
       },
     },
   },
   claims: {
-    listByWorker: {
+    listByUser: {
       method: 'GET' as const,
-      path: '/api/workers/:workerId/claims' as const,
+      path: '/api/users/:userId/claims' as const,
       responses: { 200: z.array(z.custom<typeof claims.$inferSelect>()) },
     },
     create: {
@@ -86,22 +76,6 @@ export const api = {
         200: z.custom<typeof claims.$inferSelect>(),
         404: errorSchemas.notFound
       },
-    }
-  },
-  disruptions: {
-    listByCity: {
-      method: 'GET' as const,
-      path: '/api/disruptions/:city' as const,
-      responses: { 200: z.array(z.custom<typeof disruptions.$inferSelect>()) },
-    },
-    trigger: {
-      method: 'POST' as const,
-      path: '/api/disruptions/trigger' as const, // Admin/system triggers a weather alert
-      input: insertDisruptionSchema,
-      responses: {
-        201: z.custom<typeof disruptions.$inferSelect>(),
-        400: errorSchemas.validation
-      }
     }
   },
   weather: {
